@@ -1,0 +1,31 @@
+{
+	"name": "reading-markers",
+	"version": "1.0.0",
+	"description": "Persistent color-coded reading markers for Obsidian notes",
+	"main": "main.js",
+	"type": "module",
+	"scripts": {
+		"dev": "node esbuild.config.mjs",
+		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
+		"lint": "eslint .",
+		"test": "node -e \"require('fs').rmSync('.test-dist',{recursive:true,force:true})\" && esbuild tests/*.test.ts --bundle --platform=node --format=cjs --out-extension:.js=.cjs --outdir=.test-dist && node --test .test-dist/*.test.cjs",
+		"check": "npm test && npm run build && npm run lint",
+		"release:check": "npm run check && node scripts/validate-release.mjs",
+		"release:prepare": "npm run release:check && node scripts/prepare-release.mjs"
+	},
+	"license": "0-BSD",
+	"devDependencies": {
+		"@codemirror/state": "6.5.0",
+		"@codemirror/view": "6.38.6",
+		"@eslint/js": "^9.39.4",
+		"@types/node": "^22.15.17",
+		"esbuild": "0.25.5",
+		"eslint": "^9.39.4",
+		"eslint-plugin-obsidianmd": "^0.4.0",
+		"globals": "^17.6.0",
+		"jiti": "^2.6.1",
+		"obsidian": "latest",
+		"typescript": "^5.8.3",
+		"typescript-eslint": "^8.59.1"
+	}
+}

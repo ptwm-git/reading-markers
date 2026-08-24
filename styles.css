@@ -1,0 +1,143 @@
+.reading-markers-bar,
+.reading-markers-bar-host {
+	--reading-marker-red: var(--color-red);
+	--reading-marker-orange: var(--color-orange);
+	--reading-marker-yellow: var(--color-yellow);
+	--reading-marker-green: var(--color-green);
+	--reading-marker-blue: var(--color-blue);
+	--reading-marker-purple: var(--color-purple);
+}
+
+.reading-markers-bar {
+	display: flex;
+	align-items: center;
+	min-height: 34px;
+	margin: 6px 0 14px;
+	padding: 5px 0;
+	border-top: 1px solid var(--background-modifier-border);
+	border-bottom: 1px solid var(--background-modifier-border);
+	overflow-x: auto;
+}
+
+.reading-markers-groups {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	min-width: min-content;
+}
+
+.reading-markers-group {
+	--reading-marker-color: var(--text-muted);
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	min-height: 28px;
+}
+
+.reading-markers-group[data-color='red'],
+.reading-markers-marker-button[data-color='red'],
+.reading-markers-color-button[data-color='red'] {
+	--reading-marker-color: var(--reading-marker-red);
+}
+
+.reading-markers-group[data-color='orange'],
+.reading-markers-marker-button[data-color='orange'],
+.reading-markers-color-button[data-color='orange'] {
+	--reading-marker-color: var(--reading-marker-orange);
+}
+
+.reading-markers-group[data-color='yellow'],
+.reading-markers-marker-button[data-color='yellow'],
+.reading-markers-color-button[data-color='yellow'] {
+	--reading-marker-color: var(--reading-marker-yellow);
+}
+
+.reading-markers-group[data-color='green'],
+.reading-markers-marker-button[data-color='green'],
+.reading-markers-color-button[data-color='green'] {
+	--reading-marker-color: var(--reading-marker-green);
+}
+
+.reading-markers-group[data-color='blue'],
+.reading-markers-marker-button[data-color='blue'],
+.reading-markers-color-button[data-color='blue'] {
+	--reading-marker-color: var(--reading-marker-blue);
+}
+
+.reading-markers-group[data-color='purple'],
+.reading-markers-marker-button[data-color='purple'],
+.reading-markers-color-button[data-color='purple'] {
+	--reading-marker-color: var(--reading-marker-purple);
+}
+
+.reading-markers-group-swatch {
+	width: 4px;
+	height: 20px;
+	border-radius: 2px;
+	background: var(--reading-marker-color);
+	flex: 0 0 auto;
+}
+
+.reading-markers-marker-button {
+	--reading-marker-color: var(--text-muted);
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	max-width: 230px;
+	height: 28px;
+	padding: 0 6px;
+	border: 1px solid transparent;
+	border-radius: 5px;
+	background: transparent;
+	color: var(--text-muted);
+	box-shadow: none;
+}
+
+.reading-markers-marker-button:hover,
+.reading-markers-marker-button:focus-visible {
+	border-color: var(--background-modifier-border-hover);
+	background: var(--background-modifier-hover);
+	color: var(--text-normal);
+}
+
+.reading-markers-marker-icon,
+.reading-markers-color-icon {
+	display: inline-flex;
+	color: var(--reading-marker-color);
+	flex: 0 0 auto;
+}
+
+.reading-markers-marker-icon svg,
+.reading-markers-color-icon svg {
+	width: 15px;
+	height: 15px;
+}
+
+.reading-markers-marker-excerpt {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.reading-markers-color-palette {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 8px;
+}
+
+.reading-markers-color-button {
+	--reading-marker-color: var(--text-muted);
+	display: inline-flex;
+	align-items: center;
+	justify-content: flex-start;
+	gap: 8px;
+	min-height: 38px;
+	padding: 6px 10px;
+	border-radius: 6px;
+}
+
+@media (max-width: 480px) {
+	.reading-markers-color-palette {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+}
