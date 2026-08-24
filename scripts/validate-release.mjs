@@ -90,6 +90,15 @@ requireCheck(
 	'author placeholder has been removed',
 );
 requireCheck(
+	manifest.authorUrl === 'https://github.com/ptwm-git',
+	'author URL matches the confirmed GitHub account',
+);
+requireCheck(
+	packageJson.repository?.url ===
+		'git+https://github.com/ptwm-git/reading-markers.git',
+	'package repository matches the confirmed public repository',
+);
+requireCheck(
 	typeof manifest.isDesktopOnly === 'boolean',
 	'isDesktopOnly is a boolean',
 );

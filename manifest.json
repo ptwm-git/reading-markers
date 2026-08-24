@@ -5,5 +5,6 @@
 	"minAppVersion": "1.13.7",
 	"description": "Adds persistent color-coded reading markers inside Markdown notes.",
 	"author": "ptwm-git",
+	"authorUrl": "https://github.com/ptwm-git",
 	"isDesktopOnly": true
 }

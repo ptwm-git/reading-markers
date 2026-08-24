@@ -80,6 +80,10 @@ npm run release:prepare
 
 `npm run release:prepare` creates a local release directory containing the three files Obsidian installs.
 
+## Support
+
+Report reproducible problems in [GitHub Issues](https://github.com/ptwm-git/reading-markers/issues).
+
 ## License
 
 Reading Markers is available under the [0BSD license](LICENSE).

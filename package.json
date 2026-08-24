@@ -4,6 +4,14 @@
 	"description": "Persistent color-coded reading markers for Obsidian notes",
 	"main": "main.js",
 	"type": "module",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/ptwm-git/reading-markers.git"
+	},
+	"bugs": {
+		"url": "https://github.com/ptwm-git/reading-markers/issues"
+	},
+	"homepage": "https://github.com/ptwm-git/reading-markers#readme",
 	"scripts": {
 		"dev": "node esbuild.config.mjs",
 		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
