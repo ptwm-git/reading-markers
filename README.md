@@ -83,6 +83,7 @@ npm run release:prepare
 ## Support
 
 Report reproducible problems in [GitHub Issues](https://github.com/ptwm-git/reading-markers/issues).
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the expected diagnostic details and local verification Gate.
 
 ## License
 

@@ -1,0 +1,69 @@
+name: Bug report
+description: Report a reproducible problem with Reading Markers.
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: Do not include private notes or Vault data. Use a minimal sample note when content is relevant.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What happened, and where did it happen?
+    validations:
+      required: true
+  - type: input
+    id: plugin-version
+    attributes:
+      label: Reading Markers version
+      placeholder: 1.0.0
+    validations:
+      required: true
+  - type: input
+    id: obsidian-version
+    attributes:
+      label: Obsidian version
+      placeholder: 1.13.7
+    validations:
+      required: true
+  - type: input
+    id: operating-system
+    attributes:
+      label: Operating system
+      placeholder: macOS 26, Windows 11, or Linux distribution
+    validations:
+      required: true
+  - type: dropdown
+    id: view
+    attributes:
+      label: Affected view
+      options:
+        - Editing view
+        - Reading view
+        - Both views
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: List the smallest repeatable sequence of actions.
+      placeholder: |
+        1. Open a Markdown note.
+        2. Right-click a paragraph.
+        3. Select Add reading marker.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional context
+      description: Add sanitized screenshots or relevant Reading Markers debug messages when available.
