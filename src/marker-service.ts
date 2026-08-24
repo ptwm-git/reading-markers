@@ -8,6 +8,7 @@ import {
 	planMarkerRemoval,
 } from './marker-format';
 import { PluginLogger } from './logger';
+import { strings } from './i18n';
 import { MarkerColor, MutationPlan } from './types';
 import { ColorPickerModal } from './ui/color-picker-modal';
 import { ReadingMarkersSettings } from './settings';
@@ -68,7 +69,7 @@ export class MarkerService {
 		if (editor) {
 			this.runUserAction('change-marker-color-in-editor', () => {
 				const plan = planMarkerColorChange(editor.getValue(), blockId, color);
-				this.applyEditorPlan(editor, plan, '阅读标记颜色已更新。');
+				this.applyEditorPlan(editor, plan, strings().colorUpdated);
 			});
 			return;
 		}
@@ -77,7 +78,7 @@ export class MarkerService {
 			this.applyFilePlan(
 				file,
 				(source) => planMarkerColorChange(source, blockId, color),
-				'阅读标记颜色已更新。',
+				strings().colorUpdated,
 			),
 		);
 	}
@@ -88,7 +89,7 @@ export class MarkerService {
 		if (editor) {
 			this.runUserAction('remove-marker-in-editor', () => {
 				const plan = planMarkerRemoval(editor.getValue(), blockId);
-				this.applyEditorPlan(editor, plan, '阅读标记已删除。');
+				this.applyEditorPlan(editor, plan, strings().markerRemoved);
 			});
 			return;
 		}
@@ -97,7 +98,7 @@ export class MarkerService {
 			this.applyFilePlan(
 				file,
 				(source) => planMarkerRemoval(source, blockId),
-				'阅读标记已删除。',
+				strings().markerRemoved,
 			),
 		);
 	}
@@ -109,14 +110,14 @@ export class MarkerService {
 		color: MarkerColor,
 	): void {
 		if (!this.isActiveFile(file)) {
-			new Notice('文档已经切换，请在目标位置重新添加。');
+			new Notice(strings().documentSwitched);
 			return;
 		}
 
 		const source = editor.getValue();
 		const blockId = this.createUniqueBlockId(source, color);
 		const plan = planMarkerInsertion(source, line, blockId);
-		this.applyEditorPlan(editor, plan, '阅读标记已添加。');
+		this.applyEditorPlan(editor, plan, strings().markerAdded);
 	}
 
 	private async addMarkerInFile(
@@ -130,7 +131,7 @@ export class MarkerService {
 				const blockId = this.createUniqueBlockId(source, color);
 				return planMarkerInsertion(source, line, blockId);
 			},
-			'阅读标记已添加。',
+			strings().markerAdded,
 		);
 	}
 
@@ -147,7 +148,7 @@ export class MarkerService {
 		const { replacement } = plan;
 
 		if (editor.getLine(replacement.line) !== replacement.before) {
-			new Notice('正文已发生变化，请重新执行操作。');
+			new Notice(strings().documentChanged);
 			return;
 		}
 
@@ -187,7 +188,7 @@ export class MarkerService {
 			if (updated === null) {
 				state.outcome = {
 					ok: false,
-					message: '正文已发生变化，请重新执行操作。',
+					message: strings().documentChanged,
 				};
 				return source;
 			}
@@ -197,7 +198,7 @@ export class MarkerService {
 		});
 
 		if (!state.outcome || !state.outcome.ok) {
-			new Notice(state.outcome?.message ?? '阅读标记操作失败。');
+			new Notice(state.outcome?.message ?? strings().operationFailed);
 			return;
 		}
 
@@ -214,7 +215,7 @@ export class MarkerService {
 		);
 
 		if (!marker) {
-			new Notice('这个阅读标记已经不存在。');
+			new Notice(strings().markerMissing);
 			return;
 		}
 
@@ -276,7 +277,7 @@ export class MarkerService {
 
 	private reportUnexpectedError(action: string, error: unknown): void {
 		this.logger.error(action, error);
-		new Notice('阅读标记操作失败，请重试并查看开发者控制台。');
+		new Notice(strings().operationFailed);
 	}
 
 	private notifySuccess(message: string): void {

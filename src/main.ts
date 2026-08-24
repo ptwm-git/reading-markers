@@ -1,5 +1,6 @@
-import { MarkdownView, Notice, Plugin, TFile } from 'obsidian';
+import { MarkdownView, moment, Notice, Plugin, TFile } from 'obsidian';
 import { createEditorExtensions } from './editor-extension';
+import { setLocale, strings } from './i18n';
 import { PluginLogger } from './logger';
 import { MarkerService } from './marker-service';
 import {
@@ -20,6 +21,7 @@ export default class ReadingMarkersPlugin extends Plugin {
 	private service!: MarkerService;
 
 	async onload(): Promise<void> {
+		setLocale(moment.locale());
 		this.logger = new PluginLogger(
 			() => this.settings.enableDebugLogging,
 		);
@@ -49,7 +51,7 @@ export default class ReadingMarkersPlugin extends Plugin {
 				const line = this.service.consumeEditorContextLine(editor);
 				menu.addItem((item) => {
 					item
-						.setTitle('添加阅读标记')
+						.setTitle(strings().addReadingMarker)
 						.setIcon('tag')
 						.onClick(() =>
 							this.service.openEditorColorPicker(editor, file, line),
@@ -72,12 +74,12 @@ export default class ReadingMarkersPlugin extends Plugin {
 
 		this.addCommand({
 			id: 'add-reading-marker',
-			name: '添加阅读标记',
+			name: strings().addReadingMarker,
 			editorCallback: (editor, context) => {
 				const file = context.file;
 
 				if (!file) {
-					new Notice('请先打开 Markdown 文档。');
+					new Notice(strings().noMarkdownFile);
 					return;
 				}
 
@@ -104,7 +106,7 @@ export default class ReadingMarkersPlugin extends Plugin {
 		} catch (error) {
 			this.settings = previous;
 			this.logger.error('save-settings', error);
-			new Notice('阅读标记设置保存失败，已恢复之前的设置。');
+			new Notice(strings().settingsSaveFailed);
 			return false;
 		}
 	}
@@ -115,7 +117,7 @@ export default class ReadingMarkersPlugin extends Plugin {
 		} catch (error) {
 			this.settings = { ...DEFAULT_SETTINGS };
 			this.logger.error('load-settings', error);
-			new Notice('阅读标记设置加载失败，已使用默认设置。');
+			new Notice(strings().settingsLoadFailed);
 		}
 	}
 
@@ -150,7 +152,7 @@ export default class ReadingMarkersPlugin extends Plugin {
 		const file = view?.file;
 
 		if (!file || file.extension !== 'md') {
-			new Notice('请先打开 Markdown 文档。');
+			new Notice(strings().noMarkdownFile);
 			return null;
 		}
 

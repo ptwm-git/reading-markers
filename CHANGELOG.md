@@ -13,7 +13,8 @@ All notable changes to Reading Markers are documented in this file.
 - Runtime-validated settings for success notices and opt-in debug logging.
 - Structured error logging and user-facing failure notices.
 - Deferred editor marker-bar refresh for continuous typing.
-- Automated coverage for marker rules, settings, logging, and refresh scheduling.
+- English and Chinese interface text selected from the Obsidian language.
+- Automated coverage for marker rules, localization, settings, logging, and refresh scheduling.
 
 ### Safety
 

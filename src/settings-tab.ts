@@ -4,6 +4,7 @@ import {
 	SettingDefinitionItem,
 } from 'obsidian';
 import type ReadingMarkersPlugin from './main';
+import { strings } from './i18n';
 import { ReadingMarkersSettings } from './settings';
 
 type SettingKey = keyof ReadingMarkersSettings;
@@ -19,16 +20,16 @@ export class ReadingMarkersSettingTab extends PluginSettingTab {
 	getSettingDefinitions(): SettingDefinitionItem<SettingKey>[] {
 		return [
 			{
-				name: '显示操作成功提示',
-				desc: '添加、改色或删除成功后显示短暂通知。错误提示始终显示。',
+				name: strings().showSuccessNotices,
+				desc: strings().showSuccessNoticesDescription,
 				control: {
 					type: 'toggle',
 					key: 'showSuccessNotices',
 				},
 			},
 			{
-				name: '启用调试日志',
-				desc: '在开发者控制台的 verbose 级别记录成功动作。排查问题时再开启。',
+				name: strings().enableDebugLogging,
+				desc: strings().enableDebugLoggingDescription,
 				control: {
 					type: 'toggle',
 					key: 'enableDebugLogging',

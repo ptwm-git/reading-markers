@@ -7,6 +7,7 @@ import {
 	TFile,
 } from 'obsidian';
 import { parseMarkers } from './marker-format';
+import { strings } from './i18n';
 import { MarkerService } from './marker-service';
 import { MarkerBarActions, renderMarkerBar } from './ui/marker-bar';
 
@@ -115,7 +116,7 @@ class ReadingMarkerSectionChild extends MarkdownRenderChild {
 			const menu = new Menu();
 			menu.addItem((item) => {
 				item
-					.setTitle('添加阅读标记')
+					.setTitle(strings().addReadingMarker)
 					.setIcon('tag')
 					.onClick(() => this.service.openFileColorPicker(this.file, line));
 			});

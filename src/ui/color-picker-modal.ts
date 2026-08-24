@@ -1,5 +1,6 @@
 import { App, Modal, setIcon } from 'obsidian';
-import { COLOR_LABELS, MARKER_COLORS, MarkerColor } from '../types';
+import { strings } from '../i18n';
+import { MARKER_COLORS, MarkerColor } from '../types';
 
 export class ColorPickerModal extends Modal {
 	constructor(
@@ -11,7 +12,8 @@ export class ColorPickerModal extends Modal {
 	}
 
 	onOpen(): void {
-		this.setTitle(this.currentColor ? '更改阅读标记颜色' : '选择阅读标记颜色');
+		const labels = strings();
+		this.setTitle(this.currentColor ? labels.changeMarkerColor : labels.chooseMarkerColor);
 		this.contentEl.empty();
 		this.contentEl.addClass('reading-markers-color-modal');
 
@@ -25,13 +27,13 @@ export class ColorPickerModal extends Modal {
 				attr: {
 					type: 'button',
 					'data-color': color,
-					'aria-label': COLOR_LABELS[color],
+					'aria-label': labels.colors[color],
 					'aria-pressed': String(color === this.currentColor),
 				},
 			});
 			const icon = button.createSpan({ cls: 'reading-markers-color-icon' });
 			setIcon(icon, 'tag');
-			button.createSpan({ text: COLOR_LABELS[color] });
+			button.createSpan({ text: labels.colors[color] });
 			button.addEventListener('click', () => {
 				this.close();
 				this.onChoose(color);

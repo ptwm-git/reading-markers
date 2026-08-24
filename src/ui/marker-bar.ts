@@ -1,10 +1,6 @@
 import { Menu, setIcon } from 'obsidian';
-import {
-	COLOR_LABELS,
-	MARKER_COLORS,
-	MarkerColor,
-	ReadingMarker,
-} from '../types';
+import { strings } from '../i18n';
+import { MARKER_COLORS, MarkerColor, ReadingMarker } from '../types';
 
 export interface MarkerBarActions {
 	jumpToMarker(blockId: string): void;
@@ -19,7 +15,8 @@ export function renderMarkerBar(
 ): void {
 	container.empty();
 	container.addClass('reading-markers-bar');
-	container.setAttribute('aria-label', '当前文档的阅读标记');
+	const labels = strings();
+	container.setAttribute('aria-label', labels.markerBarLabel);
 
 	const groups = container.createDiv({ cls: 'reading-markers-groups' });
 
@@ -34,12 +31,12 @@ export function renderMarkerBar(
 			cls: 'reading-markers-group',
 			attr: {
 				'data-color': color,
-				'aria-label': `${COLOR_LABELS[color]}阅读标记`,
+				'aria-label': labels.markerGroupLabel(labels.colors[color]),
 			},
 		});
 		group.createSpan({
 			cls: 'reading-markers-group-swatch',
-			attr: { title: COLOR_LABELS[color] },
+			attr: { title: labels.colors[color] },
 		});
 
 		for (const marker of colorMarkers) {
@@ -48,8 +45,8 @@ export function renderMarkerBar(
 				attr: {
 					type: 'button',
 					'data-color': color,
-					title: `${COLOR_LABELS[color]}：${marker.excerpt}`,
-					'aria-label': `跳转到${COLOR_LABELS[color]}阅读标记：${marker.excerpt}`,
+					title: labels.markerTitle(labels.colors[color], marker.excerpt),
+					'aria-label': labels.jumpToMarker(labels.colors[color], marker.excerpt),
 				},
 			});
 			const icon = button.createSpan({ cls: 'reading-markers-marker-icon' });
@@ -77,11 +74,12 @@ function showMarkerMenu(
 	actions: MarkerBarActions,
 ): void {
 	const menu = new Menu();
+	const labels = strings();
 
 	for (const color of MARKER_COLORS) {
 		menu.addItem((item) => {
 			item
-				.setTitle(`改为${COLOR_LABELS[color]}`)
+				.setTitle(labels.changeToColor(labels.colors[color]))
 				.setIcon('tag')
 				.setChecked(color === marker.color)
 				.onClick(() => actions.changeMarkerColor(marker.blockId, color));
@@ -91,7 +89,7 @@ function showMarkerMenu(
 	menu.addSeparator();
 	menu.addItem((item) => {
 		item
-			.setTitle('删除阅读标记')
+			.setTitle(labels.deleteMarker)
 			.setIcon('trash-2')
 			.setWarning(true)
 			.onClick(() => actions.removeMarker(marker.blockId));

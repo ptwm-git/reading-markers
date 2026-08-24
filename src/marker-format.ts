@@ -4,6 +4,7 @@ import {
 	MutationPlan,
 	ReadingMarker,
 } from './types';
+import { strings } from './i18n';
 
 const MARKER_PREFIX = 'study-marker';
 const UID_PATTERN = '[a-z0-9]{8,32}';
@@ -66,45 +67,45 @@ export function planMarkerInsertion(
 	const lines = source.split('\n');
 
 	if (!Number.isInteger(targetLine) || targetLine < 0 || targetLine >= lines.length) {
-		return failure('无法确定要标记的正文位置。');
+		return failure(strings().invalidTarget);
 	}
 
 	if (isInFrontmatter(lines, targetLine)) {
-		return failure('不能在文档属性区添加阅读标记。');
+		return failure(strings().frontmatterUnsupported);
 	}
 
 	if (isInFencedCodeBlock(lines, targetLine)) {
-		return failure('第一版暂不支持在代码块中添加阅读标记。');
+		return failure(strings().codeBlockUnsupported);
 	}
 
 	const target = lines[targetLine] ?? '';
 	const trimmed = target.trim();
 
 	if (!trimmed) {
-		return failure('请在包含正文的行上添加阅读标记。');
+		return failure(strings().emptyLineUnsupported);
 	}
 
 	if (BLOCKQUOTE_PATTERN.test(target)) {
-		return failure('第一版暂不支持在引用或 Callout 中添加阅读标记。');
+		return failure(strings().blockquoteUnsupported);
 	}
 
 	if (isTableLine(lines, targetLine)) {
-		return failure('第一版暂不支持在表格中添加阅读标记。');
+		return failure(strings().tableUnsupported);
 	}
 
 	if (HTML_BLOCK_PATTERN.test(target)) {
-		return failure('第一版暂不支持在 HTML 内容中添加阅读标记。');
+		return failure(strings().htmlUnsupported);
 	}
 
 	const insertionLine = findInsertionLine(lines, targetLine);
 	const before = lines[insertionLine] ?? '';
 
 	if (MARKER_PATTERN.test(before)) {
-		return failure('这个正文块已经有阅读标记。');
+		return failure(strings().alreadyMarked);
 	}
 
 	if (ANY_BLOCK_ID_PATTERN.test(before)) {
-		return failure('这个正文块已经有其他块标识符，暂不自动修改。');
+		return failure(strings().existingBlockId);
 	}
 
 	return {
@@ -126,7 +127,7 @@ export function planMarkerColorChange(
 	const marker = parseBlockId(blockId);
 
 	if (!marker) {
-		return failure('找不到有效的阅读标记。');
+		return failure(strings().invalidMarker);
 	}
 
 	const newBlockId = buildMarkerBlockId(newColor, marker.uid);
@@ -135,7 +136,7 @@ export function planMarkerColorChange(
 
 export function planMarkerRemoval(source: string, blockId: string): MutationPlan {
 	if (!parseBlockId(blockId)) {
-		return failure('找不到有效的阅读标记。');
+		return failure(strings().invalidMarker);
 	}
 
 	return planMarkerReplacement(source, blockId, '', blockId);
@@ -186,7 +187,7 @@ function planMarkerReplacement(
 		};
 	}
 
-	return failure('这个阅读标记已经不存在。');
+	return failure(strings().markerMissing);
 }
 
 function escapeRegularExpression(value: string): string {
@@ -326,7 +327,7 @@ function markerExcerpt(lines: string[], line: number, token: string): string {
 		.trim();
 
 	if (!plain) {
-		return '未命名位置';
+		return strings().unnamedPosition;
 	}
 
 	const characters = Array.from(plain);

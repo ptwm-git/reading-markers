@@ -21,19 +21,21 @@ Reading Markers is currently desktop-only and requires Obsidian 1.13.7 or later.
 ### Add a marker
 
 1. Right-click a paragraph, heading, or list item.
-2. Select **添加阅读标记**.
+2. Select **Add reading marker**.
 3. Select one of the six colors.
 
 The marker appears below the note title. Click it to return to the saved position.
 
 ### Change or remove a marker
 
-Right-click a marker in the marker bar. Select another color, or select **删除阅读标记** to remove it.
+Right-click a marker in the marker bar. Select another color, or select **Delete reading marker** to remove it.
 
 ### Settings
 
-- **显示操作成功提示** controls short notices after successful changes. Error notices remain enabled.
-- **启用调试日志** adds prefixed action logs at the developer console's verbose level. It is disabled by default.
+- **Show success notices** controls short notices after successful changes. Error notices remain enabled.
+- **Enable debug logging** adds prefixed action logs at the developer console's verbose level. It is disabled by default.
+
+Interface text automatically follows Obsidian in English or Chinese. Other languages use English.
 
 Saved settings are validated when the plugin starts. Missing or malformed values fall back to safe defaults.
 
