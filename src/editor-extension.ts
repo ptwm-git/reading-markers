@@ -13,7 +13,7 @@ import {
 import { parseMarkers } from './marker-format';
 import { RefreshScheduler } from './refresh-scheduler';
 import { ReadingMarker } from './types';
-import { MarkerBarActions, renderMarkerBar } from './ui/marker-bar';
+import { MarkerBarActions, MarkerBarEntry, renderMarkerBar } from './ui/marker-bar';
 
 export function createEditorExtensions(
 	actions: MarkerBarActions,
@@ -116,7 +116,15 @@ class MarkerBarWidget extends WidgetType {
 
 	toDOM(): HTMLElement {
 		const container = createDiv();
-		renderMarkerBar(container, this.markers, this.actions);
+		renderMarkerBar(container, toMarkerBarEntries(this.markers), this.actions);
 		return container;
 	}
+}
+
+function toMarkerBarEntries(markers: ReadingMarker[]): MarkerBarEntry[] {
+	return markers.map((marker) => ({
+		markerId: marker.blockId,
+		color: marker.color,
+		label: marker.excerpt,
+	}));
 }

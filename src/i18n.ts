@@ -31,6 +31,15 @@ export interface ReadingMarkerStrings {
 	enableDebugLogging: string;
 	enableDebugLoggingDescription: string;
 	markerBarLabel: string;
+	addPdfReadingMarker: string;
+	noPdfFile: string;
+	pdfPageUnavailable: string;
+	pdfPageAlreadyMarked: string;
+	pdfMarkerAdded: string;
+	pdfMarkerMissing: string;
+	pdfDataSaveFailed: string;
+	pdfScannedNotice: string;
+	pdfPageLabel(page: number): string;
 	colors: Record<MarkerColor, string>;
 	markerGroupLabel(color: string): string;
 	markerTitle(color: string, excerpt: string): string;
@@ -68,7 +77,16 @@ const ENGLISH: ReadingMarkerStrings = {
 	showSuccessNoticesDescription: 'Show a short notice after a marker is added, changed, or removed. Error notices always remain visible.',
 	enableDebugLogging: 'Enable debug logging',
 	enableDebugLoggingDescription: 'Record successful actions at the verbose level in the developer console. Enable this only when troubleshooting.',
-	markerBarLabel: 'Reading markers in the current note',
+	markerBarLabel: 'Reading markers in the current document',
+	addPdfReadingMarker: 'Add PDF reading marker',
+	noPdfFile: 'Open a PDF document first.',
+	pdfPageUnavailable: 'The current PDF page could not be determined.',
+	pdfPageAlreadyMarked: 'This PDF page already has a reading marker.',
+	pdfMarkerAdded: 'PDF reading marker added.',
+	pdfMarkerMissing: 'This PDF reading marker no longer exists.',
+	pdfDataSaveFailed: 'PDF reading markers could not be saved.',
+	pdfScannedNotice: 'No PDF text layer detected. Page markers are supported; text-level locations are unavailable.',
+	pdfPageLabel: (page) => `Page ${page}`,
 	colors: {
 		red: 'Red',
 		orange: 'Orange',
@@ -114,6 +132,15 @@ const CHINESE: ReadingMarkerStrings = {
 	enableDebugLogging: '启用调试日志',
 	enableDebugLoggingDescription: '在开发者控制台的 verbose 级别记录成功动作。排查问题时再开启。',
 	markerBarLabel: '当前文档的阅读标记',
+	addPdfReadingMarker: '添加 PDF 阅读标记',
+	noPdfFile: '请先打开 PDF 文档。',
+	pdfPageUnavailable: '无法确定当前 PDF 页码。',
+	pdfPageAlreadyMarked: '这一 PDF 页面已经有阅读标记。',
+	pdfMarkerAdded: 'PDF 阅读标记已添加。',
+	pdfMarkerMissing: '这个 PDF 阅读标记已经不存在。',
+	pdfDataSaveFailed: 'PDF 阅读标记保存失败。',
+	pdfScannedNotice: '未检测到 PDF 文本层，可以按页添加标记，但暂不支持文本级定位。',
+	pdfPageLabel: (page) => `第 ${page} 页`,
 	colors: {
 		red: '红色',
 		orange: '橙色',
