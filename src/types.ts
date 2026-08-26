@@ -17,6 +17,13 @@ export interface ReadingMarker {
 	excerpt: string;
 }
 
+export interface PdfReadingMarker {
+	id: string;
+	filePath: string;
+	page: number;
+	color: MarkerColor;
+}
+
 export interface LineReplacement {
 	line: number;
 	before: string;

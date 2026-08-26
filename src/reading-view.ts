@@ -9,7 +9,7 @@ import {
 import { parseMarkers } from './marker-format';
 import { strings } from './i18n';
 import { MarkerService } from './marker-service';
-import { MarkerBarActions, renderMarkerBar } from './ui/marker-bar';
+import { MarkerBarActions, MarkerBarEntry, renderMarkerBar } from './ui/marker-bar';
 
 const CONTENT_SELECTOR = 'p, li, h1, h2, h3, h4, h5, h6';
 
@@ -62,7 +62,7 @@ export async function processReadingSection(
 		el.prepend(bar);
 	}
 
-	renderMarkerBar(bar, markers, actions);
+	renderMarkerBar(bar, toMarkerBarEntries(markers), actions);
 }
 
 export function refreshReadingMarkerBars(
@@ -86,10 +86,18 @@ export function refreshReadingMarkerBars(
 			if (markers.length === 0) {
 				bar.remove();
 			} else {
-				renderMarkerBar(bar, markers, actions);
+				renderMarkerBar(bar, toMarkerBarEntries(markers), actions);
 			}
 		});
 	}
+}
+
+function toMarkerBarEntries(markers: ReturnType<typeof parseMarkers>): MarkerBarEntry[] {
+	return markers.map((marker) => ({
+		markerId: marker.blockId,
+		color: marker.color,
+		label: marker.excerpt,
+	}));
 }
 
 class ReadingMarkerSectionChild extends MarkdownRenderChild {

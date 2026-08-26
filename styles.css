@@ -8,6 +8,19 @@
 	--reading-marker-purple: var(--color-purple);
 }
 
+.reading-markers-pdf-bar-host:not(.reading-markers-pdf-host-visible) {
+	display: none;
+}
+
+.reading-markers-pdf-status {
+	margin: 6px 0 8px;
+	padding: 6px 8px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 5px;
+	color: var(--text-muted);
+	font-size: var(--font-ui-small);
+}
+
 .reading-markers-bar {
 	display: flex;
 	align-items: center;
