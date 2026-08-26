@@ -1,6 +1,6 @@
 # Reading Markers
 
-Reading Markers adds persistent, color-coded reading positions to Markdown notes. Save several places in one note, scan them below the note title, and jump back without searching through the document.
+Reading Markers adds persistent, color-coded reading positions to Markdown notes and PDF pages. Save several places in one document, scan them near the top of the document, and jump back without searching through the document.
 
 ![Reading Markers showing orange and purple positions below a note title](images/reading-markers.png)
 
@@ -13,6 +13,9 @@ Reading Markers adds persistent, color-coded reading positions to Markdown notes
 - Jump to a saved position from the marker bar.
 - Change a marker's color or remove it from the marker context menu.
 - Keep positions stable when lines are inserted above the marked content or the note is renamed.
+- Add page-level markers to PDF documents without modifying the original PDF file.
+- Right-click a PDF page or use the PDF toolbar action to add a marker to the visible page.
+- View, recolor, remove, and jump to PDF page markers from the marker bar.
 
 Reading Markers is currently desktop-only and requires Obsidian 1.13.7 or later.
 
@@ -30,6 +33,16 @@ The marker appears below the note title. Click it to return to the saved positio
 
 Right-click a marker in the marker bar. Select another color, or select **Delete reading marker** to remove it.
 
+### Mark a PDF page
+
+1. Open a PDF in Obsidian.
+2. Right-click the page you are reading and select **Add PDF reading marker**, or use the tag action in the PDF toolbar.
+3. Select a color.
+
+The marker bar appears above the PDF pages and shows entries such as **Page 8**. Click an entry to return to that page. PDF markers are saved in the plugin data, so the original PDF is not changed.
+
+The PDF phase uses page-level positions. The same PDF page cannot have two separate markers, and text selection, text excerpts, and PDF annotation are not part of this phase. Scanned image PDFs can still use page markers; when no text layer is detected, the plugin explains that text-level locations are unavailable.
+
 ### Settings
 
 - **Show success notices** controls short notices after successful changes. Error notices remain enabled.
@@ -41,7 +54,7 @@ Saved settings are validated when the plugin starts. Missing or malformed values
 
 ## Data format
 
-The plugin appends an Obsidian block ID to the marked Markdown block:
+For Markdown notes, the plugin appends an Obsidian block ID to the marked Markdown block:
 
 ```md
 This paragraph has a blue reading marker. ^study-marker-blue-a1b2c3d4
@@ -53,9 +66,11 @@ Reading Markers intentionally rejects YAML properties, fenced code blocks, table
 
 Block IDs are an Obsidian Markdown extension and may appear as plain text in other Markdown applications.
 
+For PDFs, the plugin stores a record containing the Vault-relative file path, page number, color, and plugin-owned marker ID in its local plugin data. It does not write annotations into the PDF.
+
 ## Privacy and permissions
 
-Reading Markers works locally and only reads or updates Markdown notes inside the active Vault. It does not use network services, telemetry, ads, accounts, payments, or files outside the Vault.
+Reading Markers works locally and only reads or updates Markdown notes and plugin data inside the active Vault. PDF markers do not modify PDF files. It does not use network services, telemetry, ads, accounts, payments, or files outside the Vault.
 
 ## Installation
 

@@ -2,6 +2,22 @@
 
 All notable changes to Reading Markers are documented in this file.
 
+## 1.1.0 - 2026-08-26
+
+### Added
+
+- PDF page markers stored independently from the PDF file.
+- Right-click and PDF toolbar actions for adding a marker to the visible page.
+- PDF marker list below the PDF viewer toolbar with page navigation.
+- Color changes and removal for PDF markers.
+- Scanned PDF notice when no text layer is detected; page markers remain available.
+
+### Compatibility
+
+- Markdown markers continue to use Obsidian block IDs.
+- PDF markers are page-level markers; text selection and in-file PDF annotation are not included in this phase.
+- HTML support remains a separate follow-up phase.
+
 ## 1.0.0 - 2026-08-24
 
 ### Added
