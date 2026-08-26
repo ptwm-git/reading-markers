@@ -1,16 +1,22 @@
 import { Menu, setIcon } from 'obsidian';
 import { strings } from '../i18n';
-import { MARKER_COLORS, MarkerColor, ReadingMarker } from '../types';
+import { MARKER_COLORS, MarkerColor } from '../types';
+
+export interface MarkerBarEntry {
+	markerId: string;
+	color: MarkerColor;
+	label: string;
+}
 
 export interface MarkerBarActions {
-	jumpToMarker(blockId: string): void;
-	changeMarkerColor(blockId: string, color: MarkerColor): void;
-	removeMarker(blockId: string): void;
+	jumpToMarker(markerId: string): void;
+	changeMarkerColor(markerId: string, color: MarkerColor): void;
+	removeMarker(markerId: string): void;
 }
 
 export function renderMarkerBar(
 	container: HTMLElement,
-	markers: ReadingMarker[],
+	markers: MarkerBarEntry[],
 	actions: MarkerBarActions,
 ): void {
 	container.empty();
@@ -45,19 +51,19 @@ export function renderMarkerBar(
 				attr: {
 					type: 'button',
 					'data-color': color,
-					title: labels.markerTitle(labels.colors[color], marker.excerpt),
-					'aria-label': labels.jumpToMarker(labels.colors[color], marker.excerpt),
+					title: labels.markerTitle(labels.colors[color], marker.label),
+					'aria-label': labels.jumpToMarker(labels.colors[color], marker.label),
 				},
 			});
 			const icon = button.createSpan({ cls: 'reading-markers-marker-icon' });
 			setIcon(icon, 'tag');
 			button.createSpan({
 				cls: 'reading-markers-marker-excerpt',
-				text: marker.excerpt,
+				text: marker.label,
 			});
 
 			button.addEventListener('click', () => {
-				actions.jumpToMarker(marker.blockId);
+				actions.jumpToMarker(marker.markerId);
 			});
 			button.addEventListener('contextmenu', (event) => {
 				event.preventDefault();
@@ -70,7 +76,7 @@ export function renderMarkerBar(
 
 function showMarkerMenu(
 	event: MouseEvent,
-	marker: ReadingMarker,
+	marker: MarkerBarEntry,
 	actions: MarkerBarActions,
 ): void {
 	const menu = new Menu();
@@ -82,7 +88,7 @@ function showMarkerMenu(
 				.setTitle(labels.changeToColor(labels.colors[color]))
 				.setIcon('tag')
 				.setChecked(color === marker.color)
-				.onClick(() => actions.changeMarkerColor(marker.blockId, color));
+				.onClick(() => actions.changeMarkerColor(marker.markerId, color));
 		});
 	}
 
@@ -92,7 +98,7 @@ function showMarkerMenu(
 			.setTitle(labels.deleteMarker)
 			.setIcon('trash-2')
 			.setWarning(true)
-			.onClick(() => actions.removeMarker(marker.blockId));
+			.onClick(() => actions.removeMarker(marker.markerId));
 	});
 	menu.showAtMouseEvent(event);
 }
