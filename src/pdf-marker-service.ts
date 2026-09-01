@@ -13,7 +13,7 @@ type PdfMarkerAddedCallback = (filePath: string, markerId: string) => void;
 type PdfMarkerRemovedCallback = (filePath: string, markerId: string) => void;
 export class PdfMarkerService {
 	constructor(
-		private readonly app: App,
+		readonly app: App,
 		private readonly logger: PluginLogger,
 		private readonly getMarkers: () => PdfReadingMarker[],
 		private readonly saveMarkers: (markers: PdfReadingMarker[]) => Promise<boolean>,

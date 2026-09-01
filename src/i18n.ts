@@ -43,6 +43,12 @@ export interface ReadingMarkerStrings {
 	navigationLabel: string;
 	navigationPrevious: string;
 	navigationCenter: string;
+	navigationSaveReturnTitle: string;
+	navigationSaveReturnDescription: string;
+	navigationSaveReturn: string;
+	navigationSkipReturn: string;
+	navigationCancel: string;
+	navigationReturnPosition: string;
 	navigationNext: string;
 	navigationCenterRequiresMarker: string;
 	navigationDrag: string;
@@ -98,6 +104,12 @@ const ENGLISH: ReadingMarkerStrings = {
 	navigationLabel: 'Reading marker navigation',
 	navigationPrevious: 'Jump to the nearest reading marker above',
 	navigationCenter: 'Return to the current reading marker',
+	navigationSaveReturnTitle: 'Save the current reading position?',
+	navigationSaveReturnDescription: 'Saving it will replace the previous temporary return position.',
+	navigationSaveReturn: 'Save and jump',
+	navigationSkipReturn: 'Jump without saving',
+	navigationCancel: 'Cancel',
+	navigationReturnPosition: 'Return to the previous reading position',
 	navigationNext: 'Jump to the nearest reading marker below',
 	navigationCenterRequiresMarker: 'Add a reading marker at the current position before using the center button.',
 	navigationDrag: 'Drag to move the reading marker navigation',
@@ -160,6 +172,12 @@ const CHINESE: ReadingMarkerStrings = {
 	navigationLabel: '阅读标记导航',
 	navigationPrevious: '跳转到上方最近的阅读标记',
 	navigationCenter: '返回当前阅读标记位置',
+	navigationSaveReturnTitle: '是否标记当前阅读位置以便回退？',
+	navigationSaveReturnDescription: '确认后会覆盖上一次临时回退位置。',
+	navigationSaveReturn: '标记并跳转',
+	navigationSkipReturn: '不标记，直接跳转',
+	navigationCancel: '取消',
+	navigationReturnPosition: '返回刚才的阅读位置',
 	navigationNext: '跳转到下方最近的阅读标记',
 	navigationCenterRequiresMarker: '请先在当前阅读位置添加阅读标记，再使用中间按钮。',
 	navigationDrag: '拖动以移动阅读标记导航框',

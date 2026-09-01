@@ -9,6 +9,7 @@ import {
 	getNavigationTargets,
 	renderReadingNavigation,
 } from './reading-navigation';
+import { ReturnPositionModal } from './ui/return-position-modal';
 
 const PDF_VIEW_TYPE = 'pdf';
 const PAGE_SELECTOR = '.page[data-page-number]';
@@ -16,6 +17,7 @@ const PAGE_SELECTOR = '.page[data-page-number]';
 export class PdfViewManager {
 	private readonly attachedViews = new WeakMap<FileView, HTMLElement>();
 	private readonly navigationHosts = new WeakMap<FileView, HTMLElement>();
+	private readonly returnPages = new WeakMap<FileView, number>();
 
 	constructor(
 		private readonly registerDomEvent: (
@@ -208,34 +210,83 @@ export class PdfViewManager {
 		}));
 		const centerId = this.getCenter(filePath);
 		const targets = getNavigationTargets(navigationMarkers, currentPage, centerId);
+		const returnPage = this.returnPages.get(view);
 
 		renderReadingNavigation(
 			host,
 			{
 				hasPrevious: targets.previous !== null,
 				centerEnabled: true,
+				centerTitle: returnPage === undefined
+					? strings().navigationCenter
+					: strings().navigationReturnPosition,
 				hasNext: targets.next !== null,
 			},
 			{
-				goPrevious: () => {
-					if (targets.previous) {
-						this.jumpToMarker(filePath, targets.previous.id);
-					}
-				},
+				goPrevious: () => this.navigateToAdjacent(view, markers, 'previous'),
 				goCenter: () => {
+					const currentReturnPage = this.returnPages.get(view);
+					if (currentReturnPage !== undefined) {
+						this.jumpToPage(view, currentReturnPage);
+						return;
+					}
+
 					if (targets.center) {
 						this.jumpToMarker(filePath, targets.center.id);
 						return;
 					}
 					new Notice(strings().navigationCenterRequiresMarker);
 				},
-				goNext: () => {
-					if (targets.next) {
-						this.jumpToMarker(filePath, targets.next.id);
-					}
-				},
+				goNext: () => this.navigateToAdjacent(view, markers, 'next'),
 			},
 		);
+	}
+
+	private navigateToAdjacent(
+		view: FileView,
+		markers: PdfReadingMarker[],
+		direction: 'previous' | 'next',
+	): void {
+		const filePath = view.file?.path;
+		if (!filePath) {
+			return;
+		}
+
+		const currentPage = getVisiblePdfPage(view.containerEl) ?? 0;
+		const navigationMarkers = markers.map((marker) => ({
+			id: marker.id,
+			position: marker.page,
+		}));
+		const target = getNavigationTargets(
+			navigationMarkers,
+			currentPage,
+			this.getCenter(filePath),
+		)[direction];
+		if (!target) {
+			return;
+		}
+
+		new ReturnPositionModal(
+			this.service.app,
+			() => {
+				this.returnPages.set(view, currentPage);
+				this.jumpToMarker(filePath, target.id);
+				this.renderNavigation(view, markers);
+			},
+			() => this.jumpToMarker(filePath, target.id),
+		).open();
+	}
+
+	private jumpToPage(view: FileView, pageNumber: number): void {
+		const page = view.containerEl.querySelector<HTMLElement>(
+			`${PAGE_SELECTOR}[data-page-number="${pageNumber}"]`,
+		);
+		if (!page) {
+			new Notice(strings().pdfPageUnavailable);
+			return;
+		}
+
+		page.scrollIntoView({ behavior: 'smooth', block: 'start' });
 	}
 
 	private getPdfLeaves(): FileView[] {
