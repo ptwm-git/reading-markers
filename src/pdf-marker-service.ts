@@ -9,6 +9,9 @@ import { strings } from './i18n';
 import { MarkerColor, PdfReadingMarker } from './types';
 import { ColorPickerModal } from './ui/color-picker-modal';
 
+type PdfMarkerAddedCallback = (filePath: string, markerId: string) => void;
+type PdfMarkerRemovedCallback = (filePath: string, markerId: string) => void;
+
 export class PdfMarkerService {
 	constructor(
 		private readonly app: App,
@@ -17,6 +20,8 @@ export class PdfMarkerService {
 		private readonly saveMarkers: (markers: PdfReadingMarker[]) => Promise<boolean>,
 		private readonly onMarkersChanged: (filePath: string) => void,
 		private readonly notifySuccess: (message: string) => void,
+		private readonly onMarkerAdded: PdfMarkerAddedCallback,
+		private readonly onMarkerRemoved: PdfMarkerRemovedCallback,
 	) {}
 
 	openColorPicker(file: TFile, page: number): void {
@@ -59,7 +64,9 @@ export class PdfMarkerService {
 		}
 
 		const mutation = removePdfMarker(this.getMarkers(), markerId);
-		await this.persistMutation(filePath, mutation.markers, strings().markerRemoved);
+		await this.persistMutation(filePath, mutation.markers, strings().markerRemoved, () => {
+			this.onMarkerRemoved(filePath, markerId);
+		});
 	}
 
 	private async addMarker(file: TFile, page: number, color: MarkerColor): Promise<void> {
@@ -81,13 +88,16 @@ export class PdfMarkerService {
 			return;
 		}
 
-		await this.persistMutation(file.path, mutation.markers, strings().pdfMarkerAdded);
+		await this.persistMutation(file.path, mutation.markers, strings().pdfMarkerAdded, () => {
+			this.onMarkerAdded(file.path, markerId);
+		});
 	}
 
 	private async persistMutation(
 		filePath: string,
 		markers: PdfReadingMarker[] | undefined,
 		successMessage: string,
+		onSuccess?: () => void,
 	): Promise<void> {
 		if (!markers) {
 			new Notice(strings().pdfMarkerMissing);
@@ -99,6 +109,7 @@ export class PdfMarkerService {
 		}
 
 		this.onMarkersChanged(filePath);
+		onSuccess?.();
 		this.notifySuccess(successMessage);
 	}
 

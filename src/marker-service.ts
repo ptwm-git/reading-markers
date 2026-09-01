@@ -14,6 +14,13 @@ import { ColorPickerModal } from './ui/color-picker-modal';
 import { ReadingMarkersSettings } from './settings';
 
 type SourcePlanner = (source: string) => MutationPlan;
+type MarkerAddedCallback = (filePath: string, blockId: string) => void;
+type MarkerChangedCallback = (
+	filePath: string,
+	previousBlockId: string,
+	nextBlockId: string,
+) => void;
+type MarkerRemovedCallback = (filePath: string, blockId: string) => void;
 
 export class MarkerService {
 	private editorContextLine: { line: number; timestamp: number } | null = null;
@@ -22,6 +29,9 @@ export class MarkerService {
 		readonly app: App,
 		private readonly logger: PluginLogger,
 		private readonly getSettings: () => ReadingMarkersSettings,
+		private readonly onMarkerAdded: MarkerAddedCallback,
+		private readonly onMarkerChanged: MarkerChangedCallback,
+		private readonly onMarkerRemoved: MarkerRemovedCallback,
 	) {}
 
 	rememberEditorContextLine(line: number): void {
@@ -69,7 +79,11 @@ export class MarkerService {
 		if (editor) {
 			this.runUserAction('change-marker-color-in-editor', () => {
 				const plan = planMarkerColorChange(editor.getValue(), blockId, color);
-				this.applyEditorPlan(editor, plan, strings().colorUpdated);
+				this.applyEditorPlan(editor, plan, strings().colorUpdated, () => {
+					if (plan.ok) {
+						this.onMarkerChanged(file.path, blockId, plan.blockId);
+					}
+				});
 			});
 			return;
 		}
@@ -79,6 +93,7 @@ export class MarkerService {
 				file,
 				(source) => planMarkerColorChange(source, blockId, color),
 				strings().colorUpdated,
+				(nextBlockId) => this.onMarkerChanged(file.path, blockId, nextBlockId),
 			),
 		);
 	}
@@ -89,7 +104,9 @@ export class MarkerService {
 		if (editor) {
 			this.runUserAction('remove-marker-in-editor', () => {
 				const plan = planMarkerRemoval(editor.getValue(), blockId);
-				this.applyEditorPlan(editor, plan, strings().markerRemoved);
+				this.applyEditorPlan(editor, plan, strings().markerRemoved, () => {
+					this.onMarkerRemoved(file.path, blockId);
+				});
 			});
 			return;
 		}
@@ -99,6 +116,7 @@ export class MarkerService {
 				file,
 				(source) => planMarkerRemoval(source, blockId),
 				strings().markerRemoved,
+				() => this.onMarkerRemoved(file.path, blockId),
 			),
 		);
 	}
@@ -117,7 +135,11 @@ export class MarkerService {
 		const source = editor.getValue();
 		const blockId = this.createUniqueBlockId(source, color);
 		const plan = planMarkerInsertion(source, line, blockId);
-		this.applyEditorPlan(editor, plan, strings().markerAdded);
+		this.applyEditorPlan(editor, plan, strings().markerAdded, () => {
+			if (plan.ok) {
+				this.onMarkerAdded(file.path, plan.blockId);
+			}
+		});
 	}
 
 	private async addMarkerInFile(
@@ -132,6 +154,7 @@ export class MarkerService {
 				return planMarkerInsertion(source, line, blockId);
 			},
 			strings().markerAdded,
+			(blockId) => this.onMarkerAdded(file.path, blockId),
 		);
 	}
 
@@ -139,6 +162,7 @@ export class MarkerService {
 		editor: Editor,
 		plan: MutationPlan,
 		successMessage: string,
+		onSuccess?: (blockId: string) => void,
 	): void {
 		if (!plan.ok) {
 			new Notice(plan.message);
@@ -157,6 +181,7 @@ export class MarkerService {
 			{ line: replacement.line, ch: 0 },
 			{ line: replacement.line, ch: replacement.before.length },
 		);
+		onSuccess?.(plan.blockId);
 		this.notifySuccess(successMessage);
 	}
 
@@ -164,6 +189,7 @@ export class MarkerService {
 		file: TFile,
 		planner: SourcePlanner,
 		successMessage: string,
+		onSuccess?: (blockId: string) => void,
 	): Promise<void> {
 		const state: {
 			outcome: MutationPlan | null;
@@ -203,6 +229,7 @@ export class MarkerService {
 		}
 
 		if (state.changed) {
+			onSuccess?.(state.outcome.blockId);
 			this.notifySuccess(successMessage);
 		}
 	}

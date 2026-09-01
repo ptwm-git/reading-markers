@@ -19,6 +19,8 @@ import { DEFAULT_DATA, parseData, ReadingMarkersData } from './stored-data';
 import { PdfMarkerService } from './pdf-marker-service';
 import { getVisiblePdfPage, PdfViewManager } from './pdf-view';
 import { MarkerColor, PdfReadingMarker } from './types';
+import { MarkdownNavigationManager } from './markdown-navigation';
+import { getCenterAfterMarkerAdded } from './navigation-model';
 
 export default class ReadingMarkersPlugin extends Plugin {
 	settings: ReadingMarkersSettings = { ...DEFAULT_SETTINGS };
@@ -27,6 +29,8 @@ export default class ReadingMarkersPlugin extends Plugin {
 	private service!: MarkerService;
 	private pdfService!: PdfMarkerService;
 	private pdfViews!: PdfViewManager;
+	private markdownNavigation!: MarkdownNavigationManager;
+	private readonly navigationCenters = new Map<string, string>();
 
 	async onload(): Promise<void> {
 		setLocale(moment.locale());
@@ -38,6 +42,10 @@ export default class ReadingMarkersPlugin extends Plugin {
 			this.app,
 			this.logger,
 			() => this.settings,
+			(filePath, blockId) => this.initializeNavigationCenter(filePath, blockId),
+			(filePath, previousBlockId, nextBlockId) =>
+				this.updateNavigationCenter(filePath, previousBlockId, nextBlockId),
+			(filePath, blockId) => this.clearNavigationCenter(filePath, blockId),
 		);
 		this.pdfService = new PdfMarkerService(
 			this.app,
@@ -46,15 +54,23 @@ export default class ReadingMarkersPlugin extends Plugin {
 			(markers) => this.savePdfMarkers(markers),
 			(filePath) => this.pdfViews?.refreshFile(filePath),
 			(message) => this.notifySuccess(message),
+			(filePath, markerId) => this.initializeNavigationCenter(filePath, markerId),
+			(filePath, markerId) => this.clearNavigationCenter(filePath, markerId),
 		);
 		const markerBarActions = this.createMarkerBarActions();
 		this.pdfViews = new PdfViewManager(
 			(el, type, callback, options) => this.registerDomEvent(el, type, callback, options),
 			this.pdfService,
 			() => this.data.pdfMarkers,
+			(filePath) => this.navigationCenters.get(filePath) ?? null,
 			(file) => this.createPdfMarkerBarActions(file),
 			this.logger,
 			() => this.app.workspace.getLeavesOfType('pdf'),
+		);
+		this.markdownNavigation = new MarkdownNavigationManager(
+			this.service,
+			(filePath) => this.navigationCenters.get(filePath) ?? null,
+			() => this.app.workspace.getLeavesOfType('markdown'),
 		);
 		this.addSettingTab(new ReadingMarkersSettingTab(this.app, this));
 
@@ -84,15 +100,16 @@ export default class ReadingMarkersPlugin extends Plugin {
 			}),
 		);
 
-		const syncPdfViews = (): void => {
+		const syncViews = (): void => {
 			this.pdfViews.syncAll(this.app.workspace.getLeavesOfType('pdf'));
+			this.markdownNavigation.syncAll(this.app.workspace.getLeavesOfType('markdown'));
 		};
 		const schedulePdfSync = (): void => {
-			syncPdfViews();
-			window.setTimeout(syncPdfViews, 300);
+			syncViews();
+			window.setTimeout(syncViews, 300);
 		};
-		this.registerEvent(this.app.workspace.on('layout-change', syncPdfViews));
-		this.registerEvent(this.app.workspace.on('active-leaf-change', syncPdfViews));
+		this.registerEvent(this.app.workspace.on('layout-change', syncViews));
+		this.registerEvent(this.app.workspace.on('active-leaf-change', syncViews));
 		this.registerEvent(this.app.workspace.on('file-open', schedulePdfSync));
 		this.app.workspace.onLayoutReady(schedulePdfSync);
 
@@ -105,6 +122,7 @@ export default class ReadingMarkersPlugin extends Plugin {
 		this.registerEvent(
 			this.app.metadataCache.on('changed', (file, data) => {
 				refreshReadingMarkerBars(this.app, file, data, markerBarActions);
+				this.markdownNavigation.refreshFile(file.path);
 			}),
 		);
 
@@ -152,6 +170,44 @@ export default class ReadingMarkersPlugin extends Plugin {
 				this.pdfService.openColorPicker(file, page);
 			},
 		});
+	}
+
+	private initializeNavigationCenter(filePath: string, markerId: string): void {
+		const centerId = getCenterAfterMarkerAdded(
+			this.navigationCenters.get(filePath) ?? null,
+			markerId,
+		);
+		if (centerId === this.navigationCenters.get(filePath)) {
+			return;
+		}
+
+		this.navigationCenters.set(filePath, centerId);
+		this.markdownNavigation?.refreshFile(filePath);
+		this.pdfViews?.refreshFile(filePath);
+	}
+
+	private updateNavigationCenter(
+		filePath: string,
+		previousMarkerId: string,
+		nextMarkerId: string,
+	): void {
+		if (this.navigationCenters.get(filePath) !== previousMarkerId) {
+			return;
+		}
+
+		this.navigationCenters.set(filePath, nextMarkerId);
+		this.markdownNavigation?.refreshFile(filePath);
+		this.pdfViews?.refreshFile(filePath);
+	}
+
+	private clearNavigationCenter(filePath: string, markerId: string): void {
+		if (this.navigationCenters.get(filePath) !== markerId) {
+			return;
+		}
+
+		this.navigationCenters.delete(filePath);
+		this.markdownNavigation?.refreshFile(filePath);
+		this.pdfViews?.refreshFile(filePath);
 	}
 
 	async updateSettings(

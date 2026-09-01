@@ -40,6 +40,14 @@ export interface ReadingMarkerStrings {
 	pdfDataSaveFailed: string;
 	pdfScannedNotice: string;
 	pdfPageLabel(page: number): string;
+	navigationLabel: string;
+	navigationPrevious: string;
+	navigationCenter: string;
+	navigationNext: string;
+	navigationCenterRequiresMarker: string;
+	navigationDrag: string;
+	navigationCollapse: string;
+	navigationExpand: string;
 	colors: Record<MarkerColor, string>;
 	markerGroupLabel(color: string): string;
 	markerTitle(color: string, excerpt: string): string;
@@ -87,6 +95,14 @@ const ENGLISH: ReadingMarkerStrings = {
 	pdfDataSaveFailed: 'PDF reading markers could not be saved.',
 	pdfScannedNotice: 'No PDF text layer detected. Page markers are supported; text-level locations are unavailable.',
 	pdfPageLabel: (page) => `Page ${page}`,
+	navigationLabel: 'Reading marker navigation',
+	navigationPrevious: 'Jump to the nearest reading marker above',
+	navigationCenter: 'Return to the current reading marker',
+	navigationNext: 'Jump to the nearest reading marker below',
+	navigationCenterRequiresMarker: 'Add a reading marker at the current position before using the center button.',
+	navigationDrag: 'Drag to move the reading marker navigation',
+	navigationCollapse: 'Collapse reading marker navigation',
+	navigationExpand: 'Expand reading marker navigation',
 	colors: {
 		red: 'Red',
 		orange: 'Orange',
@@ -141,6 +157,14 @@ const CHINESE: ReadingMarkerStrings = {
 	pdfDataSaveFailed: 'PDF 阅读标记保存失败。',
 	pdfScannedNotice: '未检测到 PDF 文本层，可以按页添加标记，但暂不支持文本级定位。',
 	pdfPageLabel: (page) => `第 ${page} 页`,
+	navigationLabel: '阅读标记导航',
+	navigationPrevious: '跳转到上方最近的阅读标记',
+	navigationCenter: '返回当前阅读标记位置',
+	navigationNext: '跳转到下方最近的阅读标记',
+	navigationCenterRequiresMarker: '请先在当前阅读位置添加阅读标记，再使用中间按钮。',
+	navigationDrag: '拖动以移动阅读标记导航框',
+	navigationCollapse: '收起阅读标记导航框',
+	navigationExpand: '展开阅读标记导航框',
 	colors: {
 		red: '红色',
 		orange: '橙色',

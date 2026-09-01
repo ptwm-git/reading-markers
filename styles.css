@@ -21,6 +21,154 @@
 	font-size: var(--font-ui-small);
 }
 
+.reading-markers-navigation-host {
+	position: absolute;
+	top: 50%;
+	right: 12px;
+	left: auto;
+	z-index: 20;
+	transform: translateY(-50%);
+	pointer-events: none;
+}
+
+.reading-markers-navigation {
+	display: flex;
+	flex-direction: column;
+	gap: 3px;
+	padding: 3px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 6px;
+	background: color-mix(in srgb, var(--background-primary) 62%, transparent);
+	box-shadow: 0 2px 10px color-mix(in srgb, var(--background-modifier-box-shadow) 45%, transparent);
+	backdrop-filter: blur(6px);
+	pointer-events: auto;
+}
+
+.reading-markers-navigation-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	height: 12px;
+}
+
+.reading-markers-navigation-grip,
+.reading-markers-navigation-collapse,
+.reading-markers-navigation-expand-handle {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0;
+	border: 0;
+	background: transparent;
+	color: var(--text-faint);
+	box-shadow: none;
+	pointer-events: auto;
+}
+
+.reading-markers-navigation-grip {
+	width: 18px;
+	height: 12px;
+	cursor: grab;
+}
+
+.reading-markers-navigation-grip:active {
+	cursor: grabbing;
+}
+
+.reading-markers-navigation-collapse {
+	width: 16px;
+	height: 16px;
+	cursor: pointer;
+}
+
+.reading-markers-navigation-grip:hover,
+.reading-markers-navigation-collapse:hover,
+.reading-markers-navigation-expand-handle:hover,
+.reading-markers-navigation-grip:focus-visible,
+.reading-markers-navigation-collapse:focus-visible,
+.reading-markers-navigation-expand-handle:focus-visible {
+	color: var(--text-normal);
+}
+
+.reading-markers-navigation-grip svg,
+.reading-markers-navigation-collapse svg {
+	width: 12px;
+	height: 12px;
+}
+
+.reading-markers-navigation-buttons {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.reading-markers-navigation-expand-handle {
+	display: none;
+	width: 18px;
+	height: 48px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	background: color-mix(in srgb, var(--background-primary) 48%, transparent);
+	box-shadow: 0 2px 10px color-mix(in srgb, var(--background-modifier-box-shadow) 35%, transparent);
+	backdrop-filter: blur(5px);
+	cursor: pointer;
+}
+
+.reading-markers-navigation-expand-handle svg {
+	width: 14px;
+	height: 14px;
+}
+
+.reading-markers-navigation-collapsed[data-side='right'] {
+	right: 0;
+}
+
+.reading-markers-navigation-collapsed[data-side='left'] {
+	left: 0;
+}
+
+.reading-markers-navigation-collapsed .reading-markers-navigation {
+	display: none;
+}
+
+.reading-markers-navigation-collapsed .reading-markers-navigation-expand-handle {
+	display: flex;
+}
+
+.reading-markers-navigation-dragging {
+	user-select: none;
+}
+
+.reading-markers-navigation-button {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 28px;
+	height: 28px;
+	padding: 0;
+	border: 0;
+	border-radius: 4px;
+	background: transparent;
+	color: var(--text-muted);
+	box-shadow: none;
+}
+
+.reading-markers-navigation-button:hover,
+.reading-markers-navigation-button:focus-visible {
+	background: var(--background-modifier-hover);
+	color: var(--text-normal);
+}
+
+.reading-markers-navigation-button:disabled {
+	opacity: 0.35;
+	cursor: default;
+}
+
+.reading-markers-navigation-button svg {
+	width: 16px;
+	height: 16px;
+}
+
 .reading-markers-bar {
 	display: flex;
 	align-items: center;

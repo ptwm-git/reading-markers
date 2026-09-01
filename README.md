@@ -11,6 +11,9 @@ Reading Markers adds persistent, color-coded reading positions to Markdown notes
 - Group markers by color below the note title.
 - Identify unnamed markers by an automatically generated text excerpt.
 - Jump to a saved position from the marker bar.
+- Use the vertical side controls to jump to the nearest marker above or below the current reading position.
+- Return to the session's center marker with the middle control; add a marker first if no center exists.
+- Drag the navigation panel by its grip, move it to either side, or collapse it to the edge when it is not needed.
 - Change a marker's color or remove it from the marker context menu.
 - Keep positions stable when lines are inserted above the marked content or the note is renamed.
 - Add page-level markers to PDF documents without modifying the original PDF file.
@@ -40,6 +43,12 @@ Right-click a marker in the marker bar. Select another color, or select **Delete
 3. Select a color.
 
 The marker bar appears above the PDF pages and shows entries such as **Page 8**. Click an entry to return to that page. PDF markers are saved in the plugin data, so the original PDF is not changed.
+
+### Navigate between markers
+
+In Markdown Reading view and PDF view, the right-side vertical control contains three buttons. The up arrow jumps to the nearest marker above the current position, and the down arrow jumps to the nearest marker below it. The first marker added in a document becomes the center position for the current Obsidian session. Later markers remain independent navigation targets and do not replace that center position. After jumping away, click the center button to return to the center. The center position is intentionally session-only and is reset when the plugin is reloaded or Obsidian is restarted.
+
+The panel automatically collapses after four seconds without pointer or keyboard activity. Use the small grip to drag it vertically or horizontally. Moving it near the left or right edge snaps it to that side and collapses it; click the edge handle to expand it again. Its position is retained locally in the current Obsidian installation.
 
 The PDF phase uses page-level positions. The same PDF page cannot have two separate markers, and text selection, text excerpts, and PDF annotation are not part of this phase. Scanned image PDFs can still use page markers; when no text layer is detected, the plugin explains that text-level locations are unavailable.
 

@@ -5,22 +5,29 @@ import { PluginLogger } from './logger';
 import { PdfMarkerService } from './pdf-marker-service';
 import { PdfReadingMarker } from './types';
 import { MarkerBarActions, MarkerBarEntry, renderMarkerBar } from './ui/marker-bar';
+import {
+	findNextMarker,
+	findPreviousMarker,
+	renderReadingNavigation,
+} from './reading-navigation';
 
 const PDF_VIEW_TYPE = 'pdf';
 const PAGE_SELECTOR = '.page[data-page-number]';
 
 export class PdfViewManager {
 	private readonly attachedViews = new WeakMap<FileView, HTMLElement>();
+	private readonly navigationHosts = new WeakMap<FileView, HTMLElement>();
 
 	constructor(
 		private readonly registerDomEvent: (
 			el: HTMLElement,
-			type: 'contextmenu',
-			callback: (event: MouseEvent) => void,
+			type: 'contextmenu' | 'scroll',
+			callback: (event: Event) => void,
 			options?: boolean | AddEventListenerOptions,
 		) => void,
 		private readonly service: PdfMarkerService,
 		private readonly getMarkers: () => PdfReadingMarker[],
+		private readonly getCenter: (filePath: string) => string | null,
 		private readonly createActions: (file: TFile) => MarkerBarActions,
 		private readonly logger: PluginLogger,
 		private readonly getLeaves: () => { view: unknown }[],
@@ -104,6 +111,9 @@ export class PdfViewManager {
 			view.containerEl,
 			'contextmenu',
 			(event) => {
+				if (!(event instanceof MouseEvent)) {
+					return;
+				}
 				const file = view.file;
 				if (!file || file.extension.toLowerCase() !== 'pdf') {
 					return;
@@ -125,6 +135,18 @@ export class PdfViewManager {
 				});
 				menu.showAtMouseEvent(event);
 			},
+			true,
+		);
+
+		const navigationHost = createDiv({
+			cls: 'reading-markers-navigation-host',
+		});
+		this.navigationHosts.set(view, navigationHost);
+		view.containerEl.appendChild(navigationHost);
+		this.registerDomEvent(
+			view.containerEl,
+			'scroll',
+			() => this.renderNavigation(view),
 			true,
 		);
 		this.logger.debug('attach-pdf-view', { viewType: view.getViewType() });
@@ -167,6 +189,56 @@ export class PdfViewManager {
 		}
 
 		host.toggleClass('reading-markers-pdf-host-visible', scannedPdf || markers.length > 0);
+		this.renderNavigation(view, markers);
+	}
+
+	private renderNavigation(
+		view: FileView,
+		markers = this.getMarkers().filter((marker) => marker.filePath === view.file?.path),
+	): void {
+		const host = this.navigationHosts.get(view);
+		const filePath = view.file?.path;
+		if (!host || !filePath) {
+			return;
+		}
+
+		const currentPage = getVisiblePdfPage(view.containerEl) ?? 0;
+		const navigationMarkers = markers.map((marker) => ({
+			id: marker.id,
+			position: marker.page,
+		}));
+		const previous = findPreviousMarker(navigationMarkers, currentPage);
+		const next = findNextMarker(navigationMarkers, currentPage);
+		const centerId = this.getCenter(filePath);
+		const center = markers.find((marker) => marker.id === centerId);
+
+		renderReadingNavigation(
+			host,
+			{
+				hasPrevious: previous !== null,
+				centerEnabled: true,
+				hasNext: next !== null,
+			},
+			{
+				goPrevious: () => {
+					if (previous) {
+						this.jumpToMarker(filePath, previous.id);
+					}
+				},
+				goCenter: () => {
+					if (center) {
+						this.jumpToMarker(filePath, center.id);
+						return;
+					}
+					new Notice(strings().navigationCenterRequiresMarker);
+				},
+				goNext: () => {
+					if (next) {
+						this.jumpToMarker(filePath, next.id);
+					}
+				},
+			},
+		);
 	}
 
 	private getPdfLeaves(): FileView[] {

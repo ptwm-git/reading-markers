@@ -2,6 +2,24 @@
 
 All notable changes to Reading Markers are documented in this file.
 
+## 1.2.0 - 2026-09-01
+
+### Added
+
+- Vertical reading navigation controls in Markdown Reading view and PDF view.
+- Up and down controls that jump to the nearest marker on either side of the current position.
+- A center control that returns to the current session's center marker.
+- A clear notice when the center control is used before a marker has been added.
+- Only the first marker in a document initializes the center; later markers do not unexpectedly replace it.
+- Dragging, edge snapping, manual collapse, and automatic collapse after four seconds of inactivity.
+- A translucent, low-contrast panel and edge handle to reduce reading distraction.
+
+### Compatibility
+
+- Markdown navigation estimates the current reading line from the Reading view scroll position.
+- PDF navigation uses page-level positions and preserves the existing scanned-PDF behavior.
+- The center marker is session state and is not written into the note or PDF marker data.
+
 ## 1.1.0 - 2026-08-26
 
 ### Added
