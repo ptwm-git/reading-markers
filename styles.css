@@ -8,6 +8,10 @@
 	--reading-marker-purple: var(--color-purple);
 }
 
+.reading-markers-bar-host-empty {
+	display: none;
+}
+
 .reading-markers-pdf-bar-host:not(.reading-markers-pdf-host-visible) {
 	display: none;
 }

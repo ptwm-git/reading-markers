@@ -2,6 +2,14 @@
 
 All notable changes to Reading Markers are documented in this file.
 
+## 1.2.1 - 2026-09-01
+
+### Fixed
+
+- Keep a hidden marker-bar host in Reading view so markers added from the editor appear without reopening the note.
+- Show the reading marker navigation controls in both Markdown source and Reading views.
+- Use the editor cursor as the current position in source view and keep center, previous, and next targets independent.
+
 ## 1.2.0 - 2026-09-01
 
 ### Added

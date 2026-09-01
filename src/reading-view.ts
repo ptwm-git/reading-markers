@@ -51,17 +51,19 @@ export async function processReadingSection(
 		':scope > .reading-markers-bar-host',
 	);
 
-	if (markers.length === 0) {
-		existingBar?.remove();
-		return;
-	}
-
 	const bar = existingBar ?? el.createDiv({ cls: 'reading-markers-bar-host' });
 
 	if (!existingBar) {
 		el.prepend(bar);
 	}
 
+	if (markers.length === 0) {
+		bar.empty();
+		bar.addClass('reading-markers-bar-host-empty');
+		return;
+	}
+
+	bar.removeClass('reading-markers-bar-host-empty');
 	renderMarkerBar(bar, toMarkerBarEntries(markers), actions);
 }
 
@@ -84,8 +86,10 @@ export function refreshReadingMarkerBars(
 
 		bars.forEach((bar) => {
 			if (markers.length === 0) {
-				bar.remove();
+				bar.empty();
+				bar.addClass('reading-markers-bar-host-empty');
 			} else {
+				bar.removeClass('reading-markers-bar-host-empty');
 				renderMarkerBar(bar, toMarkerBarEntries(markers), actions);
 			}
 		});

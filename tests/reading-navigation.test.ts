@@ -4,6 +4,7 @@ import {
 	findNextMarker,
 	findPreviousMarker,
 	getCenterAfterMarkerAdded,
+	getNavigationTargets,
 } from '../src/navigation-model';
 
 const markers = [
@@ -27,4 +28,16 @@ void test('returns no adjacent marker at the corresponding boundary', () => {
 void test('keeps the existing center when adding another navigation marker', () => {
 	assert.equal(getCenterAfterMarkerAdded(null, 'first'), 'first');
 	assert.equal(getCenterAfterMarkerAdded('first', 'last'), 'first');
+});
+
+void test('keeps center navigation independent from adjacent targets', () => {
+	const targets = getNavigationTargets(markers, 45, 'top');
+
+	assert.equal(targets.previous?.id, 'middle');
+	assert.equal(targets.center?.id, 'top');
+	assert.equal(targets.next?.id, 'bottom');
+});
+
+void test('has no center target when the session has not established one', () => {
+	assert.equal(getNavigationTargets(markers, 45, null).center, null);
 });

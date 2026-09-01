@@ -1,6 +1,6 @@
 {
 	"name": "reading-markers",
-	"version": "1.2.0",
+	"version": "1.2.1",
 	"description": "Persistent color-coded reading markers for Obsidian notes",
 	"main": "main.js",
 	"type": "module",
