@@ -4,8 +4,7 @@ import { parseMarkers } from './marker-format';
 import { strings } from './i18n';
 import { MarkerService } from './marker-service';
 import {
-	findNextMarker,
-	findPreviousMarker,
+	getNavigationTargets,
 	renderReadingNavigation,
 } from './reading-navigation';
 import type { ReadingMarker } from './types';
@@ -36,7 +35,7 @@ export class MarkdownNavigationManager {
 	}
 
 	syncView(view: MarkdownView): void {
-		if (view.getMode() !== 'preview' || !view.file || view.file.extension.toLowerCase() !== 'md') {
+		if (!view.file || view.file.extension.toLowerCase() !== 'md') {
 			this.states.get(view)?.host.remove();
 			return;
 		}
@@ -74,8 +73,10 @@ export class MarkdownNavigationManager {
 		state: MarkdownNavigationViewState,
 		file: TFile,
 	): Promise<void> {
-		const source = await this.service.app.vault.cachedRead(file);
-		if (view.file?.path !== file.path || view.getMode() !== 'preview') {
+		const source = view.getMode() === 'source'
+			? view.editor.getValue()
+			: await this.service.app.vault.cachedRead(file);
+		if (view.file?.path !== file.path) {
 			return;
 		}
 
@@ -86,7 +87,7 @@ export class MarkdownNavigationManager {
 
 	private render(view: MarkdownView): void {
 		const state = this.states.get(view);
-		if (!state || view.file?.path !== state.file.path || view.getMode() !== 'preview') {
+		if (!state || view.file?.path !== state.file.path) {
 			return;
 		}
 
@@ -95,34 +96,32 @@ export class MarkdownNavigationManager {
 			id: marker.blockId,
 			position: marker.line,
 		}));
-		const previous = findPreviousMarker(markers, currentPosition);
-		const next = findNextMarker(markers, currentPosition);
 		const centerId = this.getCenter(state.file.path);
-		const center = state.markers.find((marker) => marker.blockId === centerId);
+		const targets = getNavigationTargets(markers, currentPosition, centerId);
 
 		renderReadingNavigation(
 			state.host,
 			{
-				hasPrevious: previous !== null,
+				hasPrevious: targets.previous !== null,
 				centerEnabled: true,
-				hasNext: next !== null,
+				hasNext: targets.next !== null,
 			},
 			{
 				goPrevious: () => {
-					if (previous) {
-						this.service.jumpToMarker(state.file, previous.id);
+					if (targets.previous) {
+						this.service.jumpToMarker(state.file, targets.previous.id);
 					}
 				},
 				goCenter: () => {
-					if (center) {
-						this.service.jumpToMarker(state.file, center.blockId);
+					if (targets.center) {
+						this.service.jumpToMarker(state.file, targets.center.id);
 						return;
 					}
 					new Notice(strings().navigationCenterRequiresMarker);
 				},
 				goNext: () => {
-					if (next) {
-						this.service.jumpToMarker(state.file, next.id);
+					if (targets.next) {
+						this.service.jumpToMarker(state.file, targets.next.id);
 					}
 				},
 			},
@@ -131,6 +130,10 @@ export class MarkdownNavigationManager {
 }
 
 function getCurrentMarkdownLine(view: MarkdownView, totalLines: number): number {
+	if (view.getMode() === 'source') {
+		return Math.min(Math.max(view.editor.getCursor().line, 0), Math.max(0, totalLines - 1));
+	}
+
 	const scrollElement = findScrollElement(view);
 	const maxScroll = Math.max(0, scrollElement.scrollHeight - scrollElement.clientHeight);
 	if (maxScroll === 0 || totalLines <= 1) {

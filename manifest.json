@@ -1,7 +1,7 @@
 {
 	"id": "reading-markers",
 	"name": "Reading Markers",
-	"version": "1.2.0",
+	"version": "1.2.1",
 	"minAppVersion": "1.13.7",
 	"description": "Adds persistent color-coded reading markers to Markdown notes and PDF pages.",
 	"author": "ptwm-git",

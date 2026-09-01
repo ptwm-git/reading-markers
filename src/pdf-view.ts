@@ -6,8 +6,7 @@ import { PdfMarkerService } from './pdf-marker-service';
 import { PdfReadingMarker } from './types';
 import { MarkerBarActions, MarkerBarEntry, renderMarkerBar } from './ui/marker-bar';
 import {
-	findNextMarker,
-	findPreviousMarker,
+	getNavigationTargets,
 	renderReadingNavigation,
 } from './reading-navigation';
 
@@ -207,34 +206,32 @@ export class PdfViewManager {
 			id: marker.id,
 			position: marker.page,
 		}));
-		const previous = findPreviousMarker(navigationMarkers, currentPage);
-		const next = findNextMarker(navigationMarkers, currentPage);
 		const centerId = this.getCenter(filePath);
-		const center = markers.find((marker) => marker.id === centerId);
+		const targets = getNavigationTargets(navigationMarkers, currentPage, centerId);
 
 		renderReadingNavigation(
 			host,
 			{
-				hasPrevious: previous !== null,
+				hasPrevious: targets.previous !== null,
 				centerEnabled: true,
-				hasNext: next !== null,
+				hasNext: targets.next !== null,
 			},
 			{
 				goPrevious: () => {
-					if (previous) {
-						this.jumpToMarker(filePath, previous.id);
+					if (targets.previous) {
+						this.jumpToMarker(filePath, targets.previous.id);
 					}
 				},
 				goCenter: () => {
-					if (center) {
-						this.jumpToMarker(filePath, center.id);
+					if (targets.center) {
+						this.jumpToMarker(filePath, targets.center.id);
 						return;
 					}
 					new Notice(strings().navigationCenterRequiresMarker);
 				},
 				goNext: () => {
-					if (next) {
-						this.jumpToMarker(filePath, next.id);
+					if (targets.next) {
+						this.jumpToMarker(filePath, targets.next.id);
 					}
 				},
 			},

@@ -1,7 +1,11 @@
 import { setIcon } from 'obsidian';
 import { strings } from './i18n';
 export type { NavigationMarker } from './navigation-model';
-export { findNextMarker, findPreviousMarker } from './navigation-model';
+export {
+	findNextMarker,
+	findPreviousMarker,
+	getNavigationTargets,
+} from './navigation-model';
 
 const POSITION_STORAGE_KEY = 'reading-markers.navigation-position';
 const AUTO_COLLAPSE_DELAY_MS = 4000;
