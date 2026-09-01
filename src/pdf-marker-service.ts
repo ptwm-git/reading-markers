@@ -11,7 +11,6 @@ import { ColorPickerModal } from './ui/color-picker-modal';
 
 type PdfMarkerAddedCallback = (filePath: string, markerId: string) => void;
 type PdfMarkerRemovedCallback = (filePath: string, markerId: string) => void;
-
 export class PdfMarkerService {
 	constructor(
 		private readonly app: App,
