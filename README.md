@@ -12,7 +12,8 @@ Reading Markers adds persistent, color-coded reading positions to Markdown notes
 - Identify unnamed markers by an automatically generated text excerpt.
 - Jump to a saved position from the marker bar.
 - Use the vertical side controls to jump to the nearest marker above or below the current reading position.
-- Return to the session's center marker with the middle control; add a marker first if no center exists.
+- Before an up or down jump, optionally save the current position for a temporary return; the middle control returns there and saves replace the previous temporary position.
+- Fall back to the session's center marker with the middle control when no temporary return position exists.
 - Drag the navigation panel by its grip, move it to either side, or collapse it to the edge when it is not needed.
 - Change a marker's color or remove it from the marker context menu.
 - Keep positions stable when lines are inserted above the marked content or the note is renamed.
@@ -46,7 +47,7 @@ The marker bar appears above the PDF pages and shows entries such as **Page 8**.
 
 ### Navigate between markers
 
-In Markdown editing view, Markdown Reading view, and PDF view, the right-side vertical control contains three buttons. In editing view, the editor cursor is used as the current position; in Reading view, the position is estimated from the reading scroll; in PDF view, the current page is used. The up arrow jumps to the nearest marker above the current position, and the down arrow jumps to the nearest marker below it. The first marker added in a document becomes the center position for the current Obsidian session. Later markers remain independent navigation targets and do not replace that center position. After jumping away, click the center button to return to the center. The center position is intentionally session-only and is reset when the plugin is reloaded or Obsidian is restarted.
+In Markdown editing view, Markdown Reading view, and PDF view, the right-side vertical control contains three buttons. In editing view, the editor cursor is used as the current position; in Reading view, the position is estimated from the reading scroll; in PDF view, the current page is used. The up arrow jumps to the nearest marker above the current position, and the down arrow jumps to the nearest marker below it. Before either jump, the plugin asks whether to save the current position for return. Saving creates a temporary session-only return point and replaces the previous temporary point; choosing not to save keeps the previous temporary point. The middle button returns to the temporary point first, then falls back to the session center marker. When neither exists, it asks you to add a permanent reading marker. Permanent markers remain independently manageable and are not deleted by this temporary behavior.
 
 The panel automatically collapses after four seconds without pointer or keyboard activity. Use the small grip to drag it vertically or horizontally. Moving it near the left or right edge snaps it to that side and collapses it; click the edge handle to expand it again. Its position is retained locally in the current Obsidian installation.
 

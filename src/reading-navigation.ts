@@ -22,6 +22,7 @@ interface NavigationPosition {
 export interface NavigationState {
 	hasPrevious: boolean;
 	centerEnabled: boolean;
+	centerTitle?: string;
 	hasNext: boolean;
 }
 
@@ -83,7 +84,7 @@ export function renderReadingNavigation(
 	createNavigationButton(
 		buttons,
 		'circle',
-		strings().navigationCenter,
+		state.centerTitle ?? strings().navigationCenter,
 		state.centerEnabled,
 		() => actions.goCenter(),
 	);

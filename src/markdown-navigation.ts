@@ -8,12 +8,21 @@ import {
 	renderReadingNavigation,
 } from './reading-navigation';
 import type { ReadingMarker } from './types';
+import { ReturnPositionModal } from './ui/return-position-modal';
+
+interface MarkdownReturnPosition {
+	line: number;
+	ch: number;
+	scrollTop: number;
+	scrollRatio: number;
+}
 
 interface MarkdownNavigationViewState {
 	host: HTMLElement;
 	file: TFile;
 	markers: ReadingMarker[];
 	totalLines: number;
+	returnPosition: MarkdownReturnPosition | null;
 }
 
 export class MarkdownNavigationManager {
@@ -46,7 +55,7 @@ export class MarkdownNavigationManager {
 			const host = view.containerEl.createDiv({
 				cls: 'reading-markers-navigation-host',
 			});
-			state = { host, file, markers: [], totalLines: 0 };
+			state = { host, file, markers: [], totalLines: 0, returnPosition: null };
 			this.states.set(view, state);
 			view.containerEl.addEventListener(
 				'scroll',
@@ -55,6 +64,9 @@ export class MarkdownNavigationManager {
 			);
 		}
 
+		if (state.file.path !== file.path) {
+			state.returnPosition = null;
+		}
 		state.file = file;
 		void this.loadMarkers(view, state, file);
 	}
@@ -98,35 +110,110 @@ export class MarkdownNavigationManager {
 		}));
 		const centerId = this.getCenter(state.file.path);
 		const targets = getNavigationTargets(markers, currentPosition, centerId);
+		const hasReturnPosition = state.returnPosition !== null;
 
 		renderReadingNavigation(
 			state.host,
 			{
 				hasPrevious: targets.previous !== null,
 				centerEnabled: true,
+				centerTitle: hasReturnPosition
+					? strings().navigationReturnPosition
+					: strings().navigationCenter,
 				hasNext: targets.next !== null,
 			},
 			{
-				goPrevious: () => {
-					if (targets.previous) {
-						this.service.jumpToMarker(state.file, targets.previous.id);
-					}
-				},
+				goPrevious: () => this.navigateToAdjacent(view, state, 'previous'),
 				goCenter: () => {
+					if (state.returnPosition) {
+						this.restorePosition(view, state.returnPosition);
+						return;
+					}
+
 					if (targets.center) {
 						this.service.jumpToMarker(state.file, targets.center.id);
 						return;
 					}
 					new Notice(strings().navigationCenterRequiresMarker);
 				},
-				goNext: () => {
-					if (targets.next) {
-						this.service.jumpToMarker(state.file, targets.next.id);
-					}
-				},
+				goNext: () => this.navigateToAdjacent(view, state, 'next'),
 			},
 		);
 	}
+
+	private navigateToAdjacent(
+		view: MarkdownView,
+		state: MarkdownNavigationViewState,
+		direction: 'previous' | 'next',
+	): void {
+		const currentPosition = getCurrentMarkdownLine(view, state.totalLines);
+		const markers = state.markers.map((marker) => ({
+			id: marker.blockId,
+			position: marker.line,
+		}));
+		const centerId = this.getCenter(state.file.path);
+		const target = getNavigationTargets(markers, currentPosition, centerId)[direction];
+		if (!target) {
+			return;
+		}
+
+		const current = captureMarkdownPosition(view, state.totalLines);
+		new ReturnPositionModal(
+			this.service.app,
+			() => {
+				state.returnPosition = current;
+				this.service.jumpToMarker(state.file, target.id);
+				this.render(view);
+			},
+			() => this.service.jumpToMarker(state.file, target.id),
+		).open();
+	}
+
+	private restorePosition(
+		view: MarkdownView,
+		position: MarkdownReturnPosition,
+	): void {
+		if (view.getMode() === 'source') {
+			const line = Math.min(
+				Math.max(position.line, 0),
+				Math.max(0, view.editor.lineCount() - 1),
+			);
+			const ch = Math.min(position.ch, view.editor.getLine(line).length);
+			view.editor.setCursor({ line, ch: Math.max(0, ch) });
+			view.editor.scrollTo(null, position.scrollTop);
+			view.editor.focus();
+			return;
+		}
+
+		const scrollElement = findScrollElement(view);
+		const maxScroll = Math.max(0, scrollElement.scrollHeight - scrollElement.clientHeight);
+		const scrollTop = position.scrollTop > 0
+			? position.scrollTop
+			: position.scrollRatio * maxScroll;
+		scrollElement.scrollTop = Math.min(maxScroll, Math.max(0, scrollTop));
+	}
+}
+
+function captureMarkdownPosition(
+	view: MarkdownView,
+	totalLines: number,
+): MarkdownReturnPosition {
+	const scrollElement = findScrollElement(view);
+	const maxScroll = Math.max(0, scrollElement.scrollHeight - scrollElement.clientHeight);
+	const scrollTop = view.getMode() === 'source'
+		? view.editor.getScrollInfo().top
+		: scrollElement.scrollTop;
+	const scrollRatio = maxScroll === 0 ? 0 : Math.min(1, Math.max(0, scrollTop / maxScroll));
+	const cursor = view.getMode() === 'source'
+		? view.editor.getCursor()
+		: { line: getCurrentMarkdownLine(view, totalLines), ch: 0 };
+
+	return {
+		line: cursor.line,
+		ch: cursor.ch,
+		scrollTop,
+		scrollRatio,
+	};
 }
 
 function getCurrentMarkdownLine(view: MarkdownView, totalLines: number): number {

@@ -10,6 +10,12 @@ All notable changes to Reading Markers are documented in this file.
 - Show the reading marker navigation controls in both Markdown source and Reading views.
 - Use the editor cursor as the current position in source view and keep center, previous, and next targets independent.
 
+### Added
+
+- Ask whether to save the current reading position before an up or down jump.
+- Let the middle control return to a temporary reading position that overwrites the previous one when saved again.
+- Keep the existing center-marker behavior as a fallback when no temporary return position exists.
+
 ## 1.2.0 - 2026-09-01
 
 ### Added
