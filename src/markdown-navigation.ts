@@ -1,247 +1,187 @@
-import { MarkdownView, Notice } from 'obsidian';
+import { Component, MarkdownView, Notice } from 'obsidian';
 import type { TFile } from 'obsidian';
 import { parseMarkers } from './marker-format';
 import { strings } from './i18n';
 import { MarkerService } from './marker-service';
-import {
-	getNavigationTargets,
-	renderReadingNavigation,
-} from './reading-navigation';
+import { destroyReadingNavigation, getNavigationTargets, renderReadingNavigation } from './reading-navigation';
 import type { ReadingMarker } from './types';
 import { ReturnPositionModal } from './ui/return-position-modal';
+import { ReadingSession, renamedPath } from './reading-position';
+import { captureMarkdownLocation, restoreMarkdownLocation } from './reading-position-view';
+import { ReadingNavigationServices, ReadingTracker } from './reading-tracker';
 
-interface MarkdownReturnPosition {
-	line: number;
-	ch: number;
-	scrollTop: number;
-	scrollRatio: number;
-}
-
-interface MarkdownNavigationViewState {
+interface ViewState {
 	host: HTMLElement;
 	file: TFile;
 	markers: ReadingMarker[];
-	totalLines: number;
-	returnPosition: MarkdownReturnPosition | null;
+	source: string;
+	session: ReadingSession;
+	tracker: ReadingTracker;
+	events: Component;
+	revision: number;
 }
 
-export class MarkdownNavigationManager {
-	private readonly states = new WeakMap<MarkdownView, MarkdownNavigationViewState>();
+export class MarkdownNavigationManager extends Component {
+	private readonly states = new Map<MarkdownView, ViewState>();
 
 	constructor(
 		private readonly service: MarkerService,
 		private readonly getCenter: (filePath: string) => string | null,
 		private readonly getLeaves: () => { view: unknown }[],
-	) {}
+		private readonly services: ReadingNavigationServices,
+	) { super(); }
 
 	syncAll(leaves: { view: unknown }[]): void {
-		for (const leaf of leaves) {
-			const view = asMarkdownView(leaf.view);
-			if (view) {
-				this.syncView(view);
-			}
+		const views = leaves.map((leaf) => leaf.view).filter((view): view is MarkdownView => view instanceof MarkdownView);
+		for (const [view, state] of this.states) {
+			if (!views.includes(view) || !view.file) this.dispose(view, state);
 		}
+		for (const view of views) this.syncView(view);
 	}
 
 	syncView(view: MarkdownView): void {
-		if (!view.file || view.file.extension.toLowerCase() !== 'md') {
-			this.states.get(view)?.host.remove();
-			return;
-		}
-
 		const file = view.file;
+		if (!file) return;
 		let state = this.states.get(view);
+		if (state && state.file !== file) {
+			this.dispose(view, state);
+			state = undefined;
+		}
 		if (!state) {
-			const host = view.containerEl.createDiv({
-				cls: 'reading-markers-navigation-host',
-			});
-			state = { host, file, markers: [], totalLines: 0, returnPosition: null };
+			const host = view.containerEl.createDiv({ cls: 'reading-markers-navigation-host' });
+			const session = new ReadingSession(file.path, (path, location) => this.services.saveProgress(path, location));
+			const events = this.addChild(new Component());
+			const tracker = events.addChild(new ReadingTracker(view, session,
+				() => this.capture(view), () => this.render(view)));
+			state = { host, file, source: '', markers: [], session, tracker, events, revision: 0 };
 			this.states.set(view, state);
-			view.containerEl.addEventListener(
-				'scroll',
-				() => this.render(view),
-				true,
-			);
+			events.registerDomEvent(view.contentEl, 'scroll', () => this.render(view), true);
 		}
-
-		if (state.file.path !== file.path) {
-			state.returnPosition = null;
-		}
-		state.file = file;
-		void this.loadMarkers(view, state, file);
+		const current = state;
+		const revision = ++current.revision;
+		const source = view.getMode() === 'source'
+			? Promise.resolve(view.editor.getValue()) : this.service.app.vault.cachedRead(file);
+		void source.then((text) => {
+			if (this.states.get(view) !== current || revision !== current.revision || view.file !== file) return;
+			current.source = text;
+			current.markers = parseMarkers(text);
+			this.render(view);
+		}).catch(() => new Notice(strings().operationFailed));
 	}
 
 	refreshFile(filePath: string): void {
 		for (const leaf of this.getLeaves()) {
-			const view = asMarkdownView(leaf.view);
-			if (view?.file?.path === filePath) {
-				this.syncView(view);
-			}
+			if (leaf.view instanceof MarkdownView && leaf.view.file?.path === filePath) this.syncView(leaf.view);
 		}
 	}
 
-	private async loadMarkers(
-		view: MarkdownView,
-		state: MarkdownNavigationViewState,
-		file: TFile,
-	): Promise<void> {
-		const source = view.getMode() === 'source'
-			? view.editor.getValue()
-			: await this.service.app.vault.cachedRead(file);
-		if (view.file?.path !== file.path) {
+	rename(oldPath: string, newPath: string): void {
+		for (const state of this.states.values()) {
+			state.session.filePath = renamedPath(state.session.filePath, oldPath, newPath);
+		}
+	}
+
+	beginExternalJump(view: MarkdownView): void {
+		const state = this.states.get(view);
+		const current = this.capture(view);
+		if (!state || !current) return;
+		state.tracker.suppress();
+		state.session.beginDetour(current, state.session.returnLocation === null);
+		this.render(view);
+	}
+
+	navigate(view: MarkdownView, action: 'previous' | 'next' | 'center' | 'resume' | 'continue'): void {
+		const state = this.states.get(view);
+		if (!state || view.file !== state.file) return;
+		const current = this.capture(view);
+		if (action === 'continue') {
+			if (current) state.session.continueAt(current);
+			this.render(view);
 			return;
 		}
+		if (action === 'center' || action === 'resume') {
+			const location = action === 'center' ? state.session.returnLocation : this.services.getProgress(state.file.path);
+			if (location?.kind === 'markdown') {
+				state.tracker.suppress();
+				void restoreMarkdownLocation(view, this.source(view, state), location).then((exact) => {
+					if (this.states.get(view) !== state || view.file !== state.file) return;
+					if (!exact) new Notice(strings().positionApproximate);
+					state.session.continueAt(this.capture(view) ?? location);
+					this.render(view);
+				}).catch(() => new Notice(strings().operationFailed));
+			} else if (action === 'center') {
+				const center = this.getCenter(state.file.path);
+				if (center) {
+					state.tracker.suppress();
+					this.service.jumpToMarker(state.file, center, view);
+				} else new Notice(strings().navigationCenterRequiresMarker);
+			} else new Notice(strings().noReadingProgress);
+			return;
+		}
+		if (!current) {
+			new Notice(strings().invalidTarget);
+			return;
+		}
+		const target = getNavigationTargets(
+			parseMarkers(this.source(view, state)).map((marker) => ({ id: marker.blockId, position: marker.line })),
+			current.line, this.getCenter(state.file.path),
+		)[action];
+		if (!target) return;
+		const jump = (saveReturn: boolean): void => {
+			if (this.states.get(view) !== state || view.file !== state.file) {
+				new Notice(strings().documentSwitched);
+				return;
+			}
+			state.tracker.suppress();
+			state.session.beginDetour(current, saveReturn);
+			this.service.jumpToMarker(state.file, target.id, view);
+			this.render(view);
+		};
+		new ReturnPositionModal(this.service.app, () => jump(true), () => jump(false)).open();
+	}
 
-		state.markers = parseMarkers(source);
-		state.totalLines = source.split('\n').length;
-		this.render(view);
+	onunload(): void {
+		for (const [view, state] of this.states) this.dispose(view, state);
+	}
+
+	private source(view: MarkdownView, state: ViewState): string {
+		return view.getMode() === 'source' ? view.editor.getValue() : state.source;
+	}
+
+	private capture(view: MarkdownView) {
+		const state = this.states.get(view);
+		return state && view.file === state.file ? captureMarkdownLocation(view, this.source(view, state)) : null;
 	}
 
 	private render(view: MarkdownView): void {
 		const state = this.states.get(view);
-		if (!state || view.file?.path !== state.file.path) {
-			return;
-		}
-
-		const currentPosition = getCurrentMarkdownLine(view, state.totalLines);
-		const markers = state.markers.map((marker) => ({
-			id: marker.blockId,
-			position: marker.line,
-		}));
-		const centerId = this.getCenter(state.file.path);
-		const targets = getNavigationTargets(markers, currentPosition, centerId);
-		const hasReturnPosition = state.returnPosition !== null;
-
-		renderReadingNavigation(
-			state.host,
-			{
-				hasPrevious: targets.previous !== null,
-				centerEnabled: true,
-				centerTitle: hasReturnPosition
-					? strings().navigationReturnPosition
-					: strings().navigationCenter,
-				hasNext: targets.next !== null,
-			},
-			{
-				goPrevious: () => this.navigateToAdjacent(view, state, 'previous'),
-				goCenter: () => {
-					if (state.returnPosition) {
-						this.restorePosition(view, state.returnPosition);
-						return;
-					}
-
-					if (targets.center) {
-						this.service.jumpToMarker(state.file, targets.center.id);
-						return;
-					}
-					new Notice(strings().navigationCenterRequiresMarker);
-				},
-				goNext: () => this.navigateToAdjacent(view, state, 'next'),
-			},
+		if (!state || view.file !== state.file) return;
+		const current = this.capture(view);
+		const targets = getNavigationTargets(
+			state.markers.map((marker) => ({ id: marker.blockId, position: marker.line })),
+			current?.line ?? 0, this.getCenter(state.file.path),
 		);
+		renderReadingNavigation(state.host, {
+			hasPrevious: !!current && targets.previous !== null,
+			hasNext: !!current && targets.next !== null,
+			centerEnabled: true,
+			centerTitle: state.session.returnLocation ? strings().navigationReturnPosition : strings().navigationCenter,
+			hasProgress: this.services.getProgress(state.file.path) !== null,
+			detouring: state.session.detouring,
+		}, {
+			goPrevious: () => this.navigate(view, 'previous'),
+			goNext: () => this.navigate(view, 'next'),
+			goCenter: () => this.navigate(view, 'center'),
+			resume: () => this.navigate(view, 'resume'),
+			continueHere: () => this.navigate(view, 'continue'),
+			openMarkers: () => this.services.openMarkers(view),
+		});
 	}
 
-	private navigateToAdjacent(
-		view: MarkdownView,
-		state: MarkdownNavigationViewState,
-		direction: 'previous' | 'next',
-	): void {
-		const currentPosition = getCurrentMarkdownLine(view, state.totalLines);
-		const markers = state.markers.map((marker) => ({
-			id: marker.blockId,
-			position: marker.line,
-		}));
-		const centerId = this.getCenter(state.file.path);
-		const target = getNavigationTargets(markers, currentPosition, centerId)[direction];
-		if (!target) {
-			return;
-		}
-
-		const current = captureMarkdownPosition(view, state.totalLines);
-		new ReturnPositionModal(
-			this.service.app,
-			() => {
-				state.returnPosition = current;
-				this.service.jumpToMarker(state.file, target.id);
-				this.render(view);
-			},
-			() => this.service.jumpToMarker(state.file, target.id),
-		).open();
+	private dispose(view: MarkdownView, state: ViewState): void {
+		this.removeChild(state.events);
+		destroyReadingNavigation(state.host);
+		state.host.remove();
+		this.states.delete(view);
 	}
-
-	private restorePosition(
-		view: MarkdownView,
-		position: MarkdownReturnPosition,
-	): void {
-		if (view.getMode() === 'source') {
-			const line = Math.min(
-				Math.max(position.line, 0),
-				Math.max(0, view.editor.lineCount() - 1),
-			);
-			const ch = Math.min(position.ch, view.editor.getLine(line).length);
-			view.editor.setCursor({ line, ch: Math.max(0, ch) });
-			view.editor.scrollTo(null, position.scrollTop);
-			view.editor.focus();
-			return;
-		}
-
-		const scrollElement = findScrollElement(view);
-		const maxScroll = Math.max(0, scrollElement.scrollHeight - scrollElement.clientHeight);
-		const scrollTop = position.scrollTop > 0
-			? position.scrollTop
-			: position.scrollRatio * maxScroll;
-		scrollElement.scrollTop = Math.min(maxScroll, Math.max(0, scrollTop));
-	}
-}
-
-function captureMarkdownPosition(
-	view: MarkdownView,
-	totalLines: number,
-): MarkdownReturnPosition {
-	const scrollElement = findScrollElement(view);
-	const maxScroll = Math.max(0, scrollElement.scrollHeight - scrollElement.clientHeight);
-	const scrollTop = view.getMode() === 'source'
-		? view.editor.getScrollInfo().top
-		: scrollElement.scrollTop;
-	const scrollRatio = maxScroll === 0 ? 0 : Math.min(1, Math.max(0, scrollTop / maxScroll));
-	const cursor = view.getMode() === 'source'
-		? view.editor.getCursor()
-		: { line: getCurrentMarkdownLine(view, totalLines), ch: 0 };
-
-	return {
-		line: cursor.line,
-		ch: cursor.ch,
-		scrollTop,
-		scrollRatio,
-	};
-}
-
-function getCurrentMarkdownLine(view: MarkdownView, totalLines: number): number {
-	if (view.getMode() === 'source') {
-		return Math.min(Math.max(view.editor.getCursor().line, 0), Math.max(0, totalLines - 1));
-	}
-
-	const scrollElement = findScrollElement(view);
-	const maxScroll = Math.max(0, scrollElement.scrollHeight - scrollElement.clientHeight);
-	if (maxScroll === 0 || totalLines <= 1) {
-		return 0;
-	}
-
-	const ratio = Math.min(1, Math.max(0, scrollElement.scrollTop / maxScroll));
-	return Math.round(ratio * (totalLines - 1));
-}
-
-function findScrollElement(view: MarkdownView): HTMLElement {
-	const preview = view.contentEl.querySelector<HTMLElement>('.markdown-preview-view');
-	if (preview) {
-		return preview;
-	}
-	return view.contentEl;
-}
-
-function asMarkdownView(value: unknown): MarkdownView | null {
-	if (!(value instanceof MarkdownView)) {
-		return null;
-	}
-	return value;
 }

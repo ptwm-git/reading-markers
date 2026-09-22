@@ -3,6 +3,7 @@ import {
 	changePdfMarkerColor,
 	createPdfMarker,
 	removePdfMarker,
+	PdfMarkerMutation,
 } from './pdf-marker-format';
 import { PluginLogger } from './logger';
 import { strings } from './i18n';
@@ -16,7 +17,7 @@ export class PdfMarkerService {
 		readonly app: App,
 		private readonly logger: PluginLogger,
 		private readonly getMarkers: () => PdfReadingMarker[],
-		private readonly saveMarkers: (markers: PdfReadingMarker[]) => Promise<boolean>,
+		private readonly saveMarkers: (mutate: (markers: PdfReadingMarker[]) => PdfMarkerMutation) => Promise<boolean>,
 		private readonly onMarkersChanged: (filePath: string) => void,
 		private readonly notifySuccess: (message: string) => void,
 		private readonly onMarkerAdded: PdfMarkerAddedCallback,
@@ -51,8 +52,8 @@ export class PdfMarkerService {
 			return;
 		}
 
-		const mutation = changePdfMarkerColor(this.getMarkers(), markerId, color);
-		await this.persistMutation(filePath, mutation.markers, strings().colorUpdated);
+		await this.persistMutation(filePath,
+			(markers) => changePdfMarkerColor(markers, markerId, color), strings().colorUpdated);
 	}
 
 	async removeMarker(filePath: string, markerId: string): Promise<void> {
@@ -62,8 +63,7 @@ export class PdfMarkerService {
 			return;
 		}
 
-		const mutation = removePdfMarker(this.getMarkers(), markerId);
-		await this.persistMutation(filePath, mutation.markers, strings().markerRemoved, () => {
+		await this.persistMutation(filePath, (markers) => removePdfMarker(markers, markerId), strings().markerRemoved, () => {
 			this.onMarkerRemoved(filePath, markerId);
 		});
 	}
@@ -87,23 +87,19 @@ export class PdfMarkerService {
 			return;
 		}
 
-		await this.persistMutation(file.path, mutation.markers, strings().pdfMarkerAdded, () => {
+		await this.persistMutation(file.path,
+			(markers) => createPdfMarker(markers, file.path, page, color, markerId), strings().pdfMarkerAdded, () => {
 			this.onMarkerAdded(file.path, markerId);
 		});
 	}
 
 	private async persistMutation(
 		filePath: string,
-		markers: PdfReadingMarker[] | undefined,
+		mutate: (markers: PdfReadingMarker[]) => PdfMarkerMutation,
 		successMessage: string,
 		onSuccess?: () => void,
 	): Promise<void> {
-		if (!markers) {
-			new Notice(strings().pdfMarkerMissing);
-			return;
-		}
-
-		if (!(await this.saveMarkers(markers))) {
+		if (!(await this.saveMarkers(mutate))) {
 			return;
 		}
 

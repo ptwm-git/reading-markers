@@ -16,6 +16,7 @@ void test('valid saved settings are preserved', () => {
 			enableDebugLogging: true,
 		}),
 		{
+			...DEFAULT_SETTINGS,
 			showSuccessNotices: false,
 			enableDebugLogging: true,
 		},
@@ -30,6 +31,7 @@ void test('invalid fields fall back independently and unknown fields are ignored
 			futureSetting: 42,
 		}),
 		{
+			...DEFAULT_SETTINGS,
 			showSuccessNotices: true,
 			enableDebugLogging: true,
 		},
@@ -49,6 +51,8 @@ void test('preserves valid PDF markers while migrating old settings data', () =>
 			}],
 		}),
 		{
+			...DEFAULT_SETTINGS,
+			readingProgress: [],
 			showSuccessNotices: false,
 			enableDebugLogging: true,
 			pdfMarkers: [{

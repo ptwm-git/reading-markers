@@ -1,11 +1,159 @@
+.reading-markers-browser [data-color='red'] { --reading-marker-color: var(--color-red); }
+.reading-markers-browser [data-color='orange'] { --reading-marker-color: var(--color-orange); }
+.reading-markers-browser [data-color='yellow'] { --reading-marker-color: var(--color-yellow); }
+.reading-markers-browser [data-color='green'] { --reading-marker-color: var(--color-green); }
+.reading-markers-browser [data-color='blue'] { --reading-marker-color: var(--color-blue); }
+.reading-markers-browser [data-color='purple'] { --reading-marker-color: var(--color-purple); }
+.reading-markers-browser-colors [data-color] { color: var(--reading-marker-color); }
+
 .reading-markers-bar,
-.reading-markers-bar-host {
+.reading-markers-bar-host,
+.reading-markers-browser {
 	--reading-marker-red: var(--color-red);
 	--reading-marker-orange: var(--color-orange);
 	--reading-marker-yellow: var(--color-yellow);
 	--reading-marker-green: var(--color-green);
 	--reading-marker-blue: var(--color-blue);
 	--reading-marker-purple: var(--color-purple);
+}
+
+.reading-markers-navigation-button.reading-markers-hidden {
+	display: none;
+}
+
+.reading-markers-browser {
+	position: absolute;
+	top: 8px;
+	right: 54px;
+	bottom: 8px;
+	width: min(340px, calc(100% - 76px));
+	max-height: 620px;
+	z-index: 21;
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	padding: 12px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 6px;
+	background: var(--background-primary);
+	box-shadow: 0 4px 20px var(--background-modifier-box-shadow);
+	font-size: var(--font-ui-small);
+	overflow: hidden;
+}
+
+.reading-markers-browser-left {
+	left: 54px;
+	right: auto;
+}
+
+.reading-markers-browser-header,
+.reading-markers-browser-colors,
+.reading-markers-browser-row {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	min-width: 0;
+}
+
+.reading-markers-browser-header strong {
+	flex: 1;
+	overflow-wrap: anywhere;
+}
+
+.reading-markers-browser-icon {
+	width: 28px;
+	height: 28px;
+	padding: 4px;
+	flex: 0 0 28px;
+	border: none;
+	box-shadow: none;
+	background: transparent;
+	color: var(--text-muted);
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.reading-markers-browser-icon svg {
+	width: 16px;
+	height: 16px;
+}
+
+.reading-markers-browser-colors button[aria-pressed='true'] {
+	background: var(--background-modifier-hover);
+	outline: 1px solid var(--text-muted);
+}
+
+.reading-markers-browser-tabs {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.reading-markers-browser-tabs button {
+	border: none;
+	border-radius: 0;
+	box-shadow: none;
+	background: transparent;
+	white-space: normal;
+	height: auto;
+	min-height: 32px;
+	padding: 4px;
+}
+
+.reading-markers-browser-tabs button[aria-selected='true'] {
+	border-bottom: 2px solid var(--interactive-accent);
+	color: var(--text-normal);
+	font-weight: var(--font-semibold);
+}
+
+.reading-markers-browser-search {
+	width: 100%;
+}
+
+.reading-markers-browser-list {
+	overflow-y: auto;
+	overscroll-behavior: contain;
+	min-height: 0;
+	flex: 1;
+}
+
+.reading-markers-browser-status {
+	color: var(--text-muted);
+	font-size: var(--font-ui-smaller);
+}
+
+.reading-markers-browser-row {
+	border-bottom: 1px solid var(--background-modifier-border);
+	padding: 5px 0;
+}
+
+.reading-markers-browser-marker {
+	display: flex;
+	align-items: flex-start;
+	gap: 7px;
+	flex: 1;
+	min-width: 0;
+	height: auto;
+	white-space: normal;
+	text-align: start;
+	padding: 5px 2px;
+	background: transparent;
+	box-shadow: none;
+	border: none;
+}
+
+.reading-markers-browser-label {
+	display: flex;
+	flex-direction: column;
+	gap: 3px;
+	min-width: 0;
+	overflow-wrap: anywhere;
+}
+
+.reading-markers-browser-label small {
+	font-size: var(--font-ui-smaller);
+	color: var(--text-muted);
 }
 
 .reading-markers-bar-host-empty {
@@ -37,6 +185,8 @@
 
 .reading-markers-navigation {
 	display: flex;
+	overflow-y: auto;
+	max-height: var(--reading-markers-nav-max-height, none);
 	flex-direction: column;
 	gap: 3px;
 	padding: 3px;

@@ -39,6 +39,9 @@ export async function processReadingSection(
 		return;
 	}
 
+	el.dataset.readingMarkerLine = String(section.lineStart);
+	el.dataset.readingMarkerEnd = String(section.lineEnd);
+
 	const source = await service.app.vault.cachedRead(abstractFile);
 	const firstBodyLine = findFirstBodyLine(source);
 

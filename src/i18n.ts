@@ -54,6 +54,24 @@ export interface ReadingMarkerStrings {
 	navigationDrag: string;
 	navigationCollapse: string;
 	navigationExpand: string;
+	openMarkerList: string;
+	resumeReading: string;
+	continueReadingHere: string;
+	noReadingProgress: string;
+	positionApproximate: string;
+	rememberReadingPosition: string;
+	rememberReadingPositionDescription: string;
+	markerList: string;
+	currentDocument: string;
+	allDocuments: string;
+	searchMarkers: string;
+	allColors: string;
+	noMarkersFound: string;
+	loadingMarkers: string;
+	markerListIncomplete: string;
+	closeMarkerList: string;
+	refreshMarkers: string;
+	progressSaveFailed: string;
 	colors: Record<MarkerColor, string>;
 	markerGroupLabel(color: string): string;
 	markerTitle(color: string, excerpt: string): string;
@@ -115,6 +133,24 @@ const ENGLISH: ReadingMarkerStrings = {
 	navigationDrag: 'Drag to move the reading marker navigation',
 	navigationCollapse: 'Collapse reading marker navigation',
 	navigationExpand: 'Expand reading marker navigation',
+	openMarkerList: 'Open reading marker list',
+	resumeReading: 'Continue last reading position',
+	continueReadingHere: 'Continue reading from here',
+	noReadingProgress: 'No saved reading position for this document.',
+	positionApproximate: 'The original text changed. Returned to the nearest saved line.',
+	rememberReadingPosition: 'Remember reading position',
+	rememberReadingPositionDescription: 'Save one reading position per document across restarts. Marker excursions pause progress until you return or choose to continue from there.',
+	markerList: 'Reading markers',
+	currentDocument: 'Current document',
+	allDocuments: 'All documents',
+	searchMarkers: 'Search text or file name',
+	allColors: 'All colors',
+	noMarkersFound: 'No matching reading markers.',
+	loadingMarkers: 'Loading markers...',
+	markerListIncomplete: 'Some documents could not be read. Refresh to try again.',
+	closeMarkerList: 'Close reading marker list',
+	refreshMarkers: 'Refresh reading markers',
+	progressSaveFailed: 'Reading data could not be saved. Please try again.',
 	colors: {
 		red: 'Red',
 		orange: 'Orange',
@@ -183,6 +219,24 @@ const CHINESE: ReadingMarkerStrings = {
 	navigationDrag: '拖动以移动阅读标记导航框',
 	navigationCollapse: '收起阅读标记导航框',
 	navigationExpand: '展开阅读标记导航框',
+	openMarkerList: '打开阅读书签列表',
+	resumeReading: '继续上次阅读',
+	continueReadingHere: '从这里继续阅读',
+	noReadingProgress: '这篇文档还没有保存的阅读进度。',
+	positionApproximate: '原文已经变化，已返回保存位置附近。',
+	rememberReadingPosition: '记住上次阅读位置',
+	rememberReadingPositionDescription: '每篇文档保存一条跨重启续读记录。跳转翻查时暂停更新，返回原处或选择从这里继续阅读后恢复。',
+	markerList: '阅读书签',
+	currentDocument: '当前文档',
+	allDocuments: '全部文档',
+	searchMarkers: '搜索内容或文件名',
+	allColors: '全部颜色',
+	noMarkersFound: '没有匹配的阅读书签。',
+	loadingMarkers: '正在读取书签…',
+	markerListIncomplete: '部分文档读取失败，可以刷新重试。',
+	closeMarkerList: '关闭阅读书签列表',
+	refreshMarkers: '刷新阅读书签',
+	progressSaveFailed: '阅读数据保存失败，请重试。',
 	colors: {
 		red: '红色',
 		orange: '橙色',

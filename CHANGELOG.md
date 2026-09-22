@@ -2,6 +2,29 @@
 
 All notable changes to Reading Markers are documented in this file.
 
+## 1.3.0 - 2026-09-22
+
+### Added
+
+- Save one reading position per Markdown or PDF document across restarts, with an opt-out setting and an explicit resume action.
+- Pause progress tracking during marker lookups; return to the original position or continue reading at the destination.
+- Add a marker-list entry to the existing floating controls, with current/all-document scopes, search, color filtering, recoloring, and deletion.
+- Add commands for adjacent markers, temporary return, resume, and continue-here actions.
+- Follow file and folder renames and moves for PDF markers and reading progress while Obsidian is running.
+
+### Fixed
+
+- Capture the visible Markdown position instead of a stale editor cursor; resolve saved positions using block IDs, text, and surrounding context.
+- Restore PDF temporary returns and progress to an offset within the page.
+- Serialize settings, PDF marker, and reading-progress writes so concurrent operations do not replace each other's data.
+- Keep navigation buttons stable during scrolling, constrain dragged panels to the reading pane, and dispose per-view listeners and timers.
+
+### Compatibility
+
+- Existing colored markers and save/skip/cancel behavior are preserved.
+- The list uses Reading Markers data; it does not replace or modify Obsidian's core Bookmarks sidebar.
+- HTML, OCR, text-level PDF annotations, mobile support, marker notes, and export remain outside this release.
+
 ## 1.2.1 - 2026-09-01
 
 ### Fixed

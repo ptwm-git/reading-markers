@@ -69,8 +69,8 @@ export class MarkerService {
 		});
 	}
 
-	jumpToMarker(file: TFile, blockId: string): void {
-		this.runAsyncUserAction('jump-to-marker', () => this.jump(file, blockId));
+	jumpToMarker(file: TFile, blockId: string, view?: MarkdownView): void {
+		this.runAsyncUserAction('jump-to-marker', () => this.jump(file, blockId, view));
 	}
 
 	changeMarkerColor(file: TFile, blockId: string, color: MarkerColor): void {
@@ -234,8 +234,8 @@ export class MarkerService {
 		}
 	}
 
-	private async jump(file: TFile, blockId: string): Promise<void> {
-		const editor = this.getActiveEditor(file);
+	private async jump(file: TFile, blockId: string, view?: MarkdownView): Promise<void> {
+		const editor = view?.file === file && view.getMode() === 'source' ? view.editor : this.getActiveEditor(file);
 		const source = editor?.getValue() ?? (await this.app.vault.cachedRead(file));
 		const marker = parseMarkers(source).find(
 			(candidate) => candidate.blockId === blockId,
@@ -254,7 +254,11 @@ export class MarkerService {
 			return;
 		}
 
-		await this.app.workspace.openLinkText(`#^${blockId}`, file.path, false);
+		if (view?.file === file) {
+			view.setEphemeralState({ line: marker.line });
+		} else {
+			await this.app.workspace.openLinkText(`#^${blockId}`, file.path, false);
+		}
 	}
 
 	private createUniqueBlockId(source: string, color: MarkerColor): string {

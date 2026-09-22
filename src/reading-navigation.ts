@@ -24,19 +24,48 @@ export interface NavigationState {
 	centerEnabled: boolean;
 	centerTitle?: string;
 	hasNext: boolean;
+	hasProgress?: boolean;
+	detouring?: boolean;
 }
 
 export interface NavigationActions {
 	goPrevious(): void;
 	goCenter(): void;
 	goNext(): void;
+	openMarkers?(): void;
+	resume?(): void;
+	continueHere?(): void;
 }
+
+const navigationActions = new WeakMap<HTMLElement, NavigationActions>();
+const dragCleanups = new WeakMap<HTMLElement, () => void>();
 
 export function renderReadingNavigation(
 	container: HTMLElement,
 	state: NavigationState,
 	actions: NavigationActions,
 ): void {
+	navigationActions.set(container, actions);
+	const existing = container.querySelector<HTMLElement>('.reading-markers-navigation');
+	if (existing) {
+		const update = (name: string, enabled: boolean, title?: string): void => {
+			const button = existing.querySelector<HTMLButtonElement>(`[data-navigation-action="${name}"]`);
+			if (!button) return;
+			button.disabled = !enabled;
+			if (title) {
+				button.title = title;
+				button.setAttribute('aria-label', title);
+			}
+		};
+		update('previous', state.hasPrevious);
+		update('next', state.hasNext);
+		update('center', state.centerEnabled, state.centerTitle ?? strings().navigationCenter);
+		update('resume', !!state.hasProgress);
+		const continueButton = existing.querySelector<HTMLElement>('[data-navigation-action="continue"]');
+		continueButton?.toggleClass('reading-markers-hidden', !state.detouring);
+		applyPosition(container, getNavigationPosition(container));
+		return;
+	}
 	initializeNavigationHost(container);
 	const collapsed = container.dataset.collapsed === 'true';
 	const side = getNavigationPosition(container).side;
@@ -74,27 +103,40 @@ export function renderReadingNavigation(
 
 	const buttons = toolbar.createDiv({ cls: 'reading-markers-navigation-buttons' });
 
-	createNavigationButton(
+	const previous = createNavigationButton(
 		buttons,
 		'chevron-up',
 		strings().navigationPrevious,
 		state.hasPrevious,
-		() => actions.goPrevious(),
+		() => navigationActions.get(container)?.goPrevious(),
 	);
-	createNavigationButton(
+	previous.dataset.navigationAction = 'previous';
+	const center = createNavigationButton(
 		buttons,
 		'circle',
 		state.centerTitle ?? strings().navigationCenter,
 		state.centerEnabled,
-		() => actions.goCenter(),
+		() => navigationActions.get(container)?.goCenter(),
 	);
-	createNavigationButton(
+	center.dataset.navigationAction = 'center';
+	const next = createNavigationButton(
 		buttons,
 		'chevron-down',
 		strings().navigationNext,
 		state.hasNext,
-		() => actions.goNext(),
+		() => navigationActions.get(container)?.goNext(),
 	);
+	next.dataset.navigationAction = 'next';
+	const list = createNavigationButton(buttons, 'list', strings().openMarkerList, true,
+		() => navigationActions.get(container)?.openMarkers?.());
+	list.dataset.navigationAction = 'list';
+	const resume = createNavigationButton(buttons, 'history', strings().resumeReading, !!state.hasProgress,
+		() => navigationActions.get(container)?.resume?.());
+	resume.dataset.navigationAction = 'resume';
+	const continueButton = createNavigationButton(buttons, 'play', strings().continueReadingHere, true,
+		() => navigationActions.get(container)?.continueHere?.());
+	continueButton.dataset.navigationAction = 'continue';
+	continueButton.toggleClass('reading-markers-hidden', !state.detouring);
 
 	const expand = shell.createEl('button', {
 		cls: 'reading-markers-navigation-expand-handle',
@@ -108,6 +150,7 @@ export function renderReadingNavigation(
 	expand.addEventListener('click', () => setCollapsed(container, false));
 
 	container.toggleClass('reading-markers-navigation-collapsed', collapsed);
+	applyPosition(container, getNavigationPosition(container));
 	ensureInteractionHandlers(container);
 	scheduleAutoCollapse(container);
 }
@@ -118,7 +161,7 @@ function createNavigationButton(
 	title: string,
 	enabled: boolean,
 	onClick: () => void,
-): void {
+): HTMLButtonElement {
 	const button = container.createEl('button', {
 		cls: 'reading-markers-navigation-button',
 		attr: {
@@ -130,6 +173,13 @@ function createNavigationButton(
 	setIcon(button, icon);
 	button.disabled = !enabled;
 	button.addEventListener('click', onClick);
+	return button;
+}
+
+export function destroyReadingNavigation(container: HTMLElement): void {
+	clearAutoCollapse(container);
+	dragCleanups.get(container)?.();
+	navigationActions.delete(container);
 }
 
 function initializeNavigationHost(container: HTMLElement): void {
@@ -190,28 +240,43 @@ function normalizePosition(value: Partial<NavigationPosition>): NavigationPositi
 }
 
 function applyPosition(container: HTMLElement, position: NavigationPosition): void {
+	const changedSide = container.dataset.side !== position.side;
 	container.dataset.side = position.side;
+	const parent = container.offsetParent as HTMLElement | null;
+	const toolbar = container.querySelector<HTMLElement>('.reading-markers-navigation');
+	if (toolbar && parent?.clientHeight) {
+		const maxHeight = `${Math.max(32, parent.clientHeight - 48)}px`;
+		toolbar.setCssProps({ '--reading-markers-nav-max-height': maxHeight });
+	}
+	const inset = Math.ceil(container.offsetHeight / 2) + 12;
 	const cssProps: Record<string, string> = {
-		top: `${position.topPercent * 100}%`,
+		top: `clamp(${inset}px, ${position.topPercent * 100}%, calc(100% - ${inset}px))`,
 		transform: 'translateY(-50%)',
 	};
+	const edge = container.dataset.collapsed === 'true' ? '0px' : '12px';
+	if (changedSide) {
+		const collapse = container.querySelector<HTMLElement>('.reading-markers-navigation-collapse');
+		const expand = container.querySelector<HTMLElement>('.reading-markers-navigation-expand-handle');
+		if (collapse) setIcon(collapse, position.side === 'left' ? 'chevron-left' : 'chevron-right');
+		if (expand) setIcon(expand, position.side === 'left' ? 'chevron-right' : 'chevron-left');
+	}
 
 	if (position.side === 'left') {
-		cssProps.left = '12px';
+		cssProps.left = edge;
 		cssProps.right = 'auto';
 		container.setCssProps(cssProps);
 		return;
 	}
 
 	if (position.side === 'free') {
-		cssProps.left = `${position.xPercent * 100}%`;
+		cssProps.left = `clamp(12px, ${position.xPercent * 100}%, calc(100% - ${container.offsetWidth + 12}px))`;
 		cssProps.right = 'auto';
 		container.setCssProps(cssProps);
 		return;
 	}
 
 	cssProps.left = 'auto';
-	cssProps.right = '12px';
+	cssProps.right = edge;
 	container.setCssProps(cssProps);
 }
 
@@ -222,6 +287,7 @@ function setCollapsed(container: HTMLElement, collapsed: boolean): void {
 
 	container.dataset.collapsed = String(collapsed);
 	container.toggleClass('reading-markers-navigation-collapsed', collapsed);
+	applyPosition(container, getNavigationPosition(container));
 	if (collapsed) {
 		clearAutoCollapse(container);
 	} else {
@@ -280,6 +346,7 @@ function startDrag(container: HTMLElement, event: PointerEvent): void {
 	}
 
 	event.preventDefault();
+	dragCleanups.get(container)?.();
 	setCollapsed(container, false);
 	container.addClass('reading-markers-navigation-dragging');
 	clearAutoCollapse(container);
@@ -306,21 +373,29 @@ function startDrag(container: HTMLElement, event: PointerEvent): void {
 			xPercent: (centerX - parentRect.left) / Math.max(1, parentRect.width),
 		});
 	};
+	const cleanup = (): void => {
+		window.removeEventListener('pointermove', update);
+		window.removeEventListener('pointerup', finish);
+		window.removeEventListener('pointercancel', cancel);
+		container.removeClass('reading-markers-navigation-dragging');
+		dragCleanups.delete(container);
+	};
+	const cancel = (): void => { cleanup(); scheduleAutoCollapse(container); };
 	const finish = (upEvent: PointerEvent): void => {
 		update(upEvent);
-		container.removeClass('reading-markers-navigation-dragging');
+		cleanup();
 		const position = getNavigationPosition(container);
 		if (position.side === 'left' || position.side === 'right') {
 			setCollapsed(container, true);
 		} else {
 			scheduleAutoCollapse(container);
 		}
-		window.removeEventListener('pointermove', update);
-		window.removeEventListener('pointerup', finish);
 	};
 
+	dragCleanups.set(container, cleanup);
 	window.addEventListener('pointermove', update);
 	window.addEventListener('pointerup', finish, { once: true });
+	window.addEventListener('pointercancel', cancel, { once: true });
 }
 
 function clamp(value: number, min: number, max: number): number {

@@ -20,6 +20,11 @@ export class ReadingMarkersSettingTab extends PluginSettingTab {
 	getSettingDefinitions(): SettingDefinitionItem<SettingKey>[] {
 		return [
 			{
+				name: strings().rememberReadingPosition,
+				desc: strings().rememberReadingPositionDescription,
+				control: { type: 'toggle', key: 'rememberReadingPosition' },
+			},
+			{
 				name: strings().showSuccessNotices,
 				desc: strings().showSuccessNoticesDescription,
 				control: {
