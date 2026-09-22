@@ -5,7 +5,7 @@ import { PluginLogger } from './logger';
 import { PdfMarkerService } from './pdf-marker-service';
 import { PdfReadingMarker } from './types';
 import { MarkerBarActions, MarkerBarEntry, renderMarkerBar } from './ui/marker-bar';
-import { destroyReadingNavigation, getNavigationTargets, renderReadingNavigation } from './reading-navigation';
+import { destroyReadingNavigation, getNavigationTargets, removeStaleNavigation, renderReadingNavigation } from './reading-navigation';
 import { ReturnPositionModal } from './ui/return-position-modal';
 import { PdfLocation, ReadingSession, renamedPath } from './reading-position';
 import { ReadingNavigationServices, ReadingTracker } from './reading-tracker';
@@ -140,6 +140,15 @@ export class PdfViewManager extends Component {
 	}
 
 	private attachView(view: FileView, file: TFile): void {
+		// Versions before 1.3.0 left UI behind when disabled or upgraded in place.
+		const legacyUi = view.containerEl.querySelector('.reading-markers-navigation-host, .reading-markers-pdf-bar-host');
+		if (legacyUi) {
+			for (const action of Array.from(view.containerEl.querySelectorAll<HTMLElement>('.view-action'))) {
+				if ([strings().addReadingMarker, strings().addPdfReadingMarker].includes(action.getAttribute('aria-label') ?? '')) action.remove();
+			}
+		}
+		removeStaleNavigation(view.containerEl);
+		for (const bar of Array.from(view.containerEl.querySelectorAll('.reading-markers-pdf-bar-host'))) bar.remove();
 		const events = this.addChild(new Component());
 		const session = new ReadingSession(file.path, (path, location) => this.services.saveProgress(path, location));
 		const tracker = events.addChild(new ReadingTracker(view, session,

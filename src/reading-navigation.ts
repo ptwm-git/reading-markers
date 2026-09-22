@@ -182,6 +182,13 @@ export function destroyReadingNavigation(container: HTMLElement): void {
 	navigationActions.delete(container);
 }
 
+export function removeStaleNavigation(container: HTMLElement): void {
+	for (const host of Array.from(container.querySelectorAll<HTMLElement>('.reading-markers-navigation-host'))) {
+		destroyReadingNavigation(host);
+		host.remove();
+	}
+}
+
 function initializeNavigationHost(container: HTMLElement): void {
 	if (container.dataset.navigationInitialized === 'true') {
 		return;

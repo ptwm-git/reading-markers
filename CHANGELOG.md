@@ -18,6 +18,7 @@ All notable changes to Reading Markers are documented in this file.
 - Restore PDF temporary returns and progress to an offset within the page.
 - Serialize settings, PDF marker, and reading-progress writes so concurrent operations do not replace each other's data.
 - Keep navigation buttons stable during scrolling, constrain dragged panels to the reading pane, and dispose per-view listeners and timers.
+- Remove navigation panels and PDF actions left behind by pre-1.3.0 in-place upgrades.
 
 ### Compatibility
 

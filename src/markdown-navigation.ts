@@ -3,7 +3,7 @@ import type { TFile } from 'obsidian';
 import { parseMarkers } from './marker-format';
 import { strings } from './i18n';
 import { MarkerService } from './marker-service';
-import { destroyReadingNavigation, getNavigationTargets, renderReadingNavigation } from './reading-navigation';
+import { destroyReadingNavigation, getNavigationTargets, removeStaleNavigation, renderReadingNavigation } from './reading-navigation';
 import type { ReadingMarker } from './types';
 import { ReturnPositionModal } from './ui/return-position-modal';
 import { ReadingSession, renamedPath } from './reading-position';
@@ -48,6 +48,7 @@ export class MarkdownNavigationManager extends Component {
 			state = undefined;
 		}
 		if (!state) {
+			removeStaleNavigation(view.containerEl);
 			const host = view.containerEl.createDiv({ cls: 'reading-markers-navigation-host' });
 			const session = new ReadingSession(file.path, (path, location) => this.services.saveProgress(path, location));
 			const events = this.addChild(new Component());
